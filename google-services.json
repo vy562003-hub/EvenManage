@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "410481049293",
+    "firebase_url": "https://chat-76f28-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "chat-76f28",
+    "storage_bucket": "chat-76f28.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410481049293:android:e25507ce10fa8c9edc3384",
+        "android_client_info": {
+          "package_name": "com.vishal_kumar_yadav.EventManage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyCdvaVsWV7m3PxwzdW6BnxKBmMJL72DU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

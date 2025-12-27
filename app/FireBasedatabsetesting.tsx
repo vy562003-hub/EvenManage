@@ -13,4 +13,6 @@ import { db } from "../config/firebaseConfig";
   console.log("✅ User added successfully!");
 };
 
-export default FireBasedatabsetesting;
+const f = ()=> {FireBasedatabsetesting('vv','bbb')}
+
+export default f;

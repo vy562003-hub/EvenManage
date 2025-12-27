@@ -9,15 +9,36 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  SafeAreaView,
+  Image,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {  useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { ref, push, onValue } from "firebase/database";
 import { db } from "@/config/firebaseConfig";
 import { useRoute } from "@react-navigation/native";
-//import {USER_ID,SEND_NOTIFY} from "@env";
-const USER_ID=process.env.EXPO_PUBLIC_USER_ID;const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY;
+import io, { Socket } from "socket.io-client";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import { useNavigation } from "expo-router";
+
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
+const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
+const SOCKET_URL =
+  process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL || "http://10.57.13.82:5000";
+
+type ChatMessage = {
+  senderId: string;
+  receiverId: string;
+  type?: "text" | "file";
+  text?: string;
+  fileName?: string;
+  storageKey?: string;
+  timestamp: number;
+};
+
 export default function ChatScreen() {
+  const navigation = useNavigation();
   const route = useRoute();
   const { receiverId, receiverName } = route.params as {
     receiverId: string;
@@ -25,16 +46,24 @@ export default function ChatScreen() {
   };
 
   const [currentUserId, setCurrentUserId] = useState("");
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const chatId =
-    currentUserId < receiverId
-      ? `${currentUserId}_${receiverId}`
-      : `${receiverId}_${currentUserId}`;
+  const socketRef = useRef<Socket | null>(null);
+  const fileBuffersRef = useRef<Record<string, string[]>>({});
 
+  const baseDir = FileSystem.documentDirectory || FileSystem.cacheDirectory || "";
+
+  const chatId =
+    currentUserId && receiverId
+      ? currentUserId < receiverId
+        ? `${currentUserId}_${receiverId}`
+        : `${receiverId}_${currentUserId}`
+      : "";
+
+  // simple fade-in header
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -43,6 +72,7 @@ export default function ChatScreen() {
     }).start();
   }, []);
 
+  // 1️⃣ Get current user from backend session
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -50,7 +80,11 @@ export default function ChatScreen() {
           credentials: "include",
         });
         const data = await res.json();
-        setCurrentUserId(data.userId);
+        if (data?.userId) {
+          setCurrentUserId(data.userId);
+        } else {
+          console.warn("No userId in session response");
+        }
       } catch (err) {
         console.error("Error fetching session:", err);
       }
@@ -58,44 +92,232 @@ export default function ChatScreen() {
     fetchSession();
   }, []);
 
+  // 2️⃣ Setup Socket.IO once we know the user ID
   useEffect(() => {
     if (!currentUserId) return;
+
+    const socket = io(SOCKET_URL, {
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("register", currentUserId); // backend: one socket per user
+    });
+
+    socket.on("file-chunk", async (data) => {
+      try {
+        const {
+          chatId: incomingChatId,
+          storageKey,
+          fileName,
+          chunk,
+          chunkIndex,
+          isLast,
+        } = data;
+
+        if (!incomingChatId || !storageKey || !chunk) return;
+        if (!baseDir) return;
+
+        const key = `${incomingChatId}_${storageKey}`;
+        if (!fileBuffersRef.current[key]) fileBuffersRef.current[key] = [];
+        fileBuffersRef.current[key][chunkIndex] = chunk;
+
+        if (isLast) {
+          const base64 = fileBuffersRef.current[key].join("");
+          delete fileBuffersRef.current[key];
+
+          const localPath = `${baseDir}${storageKey}`;
+          await FileSystem.writeAsStringAsync(localPath, base64, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          console.log("Received file saved at:", localPath);
+        }
+      } catch (err) {
+        console.error("Error handling file-chunk:", err);
+      }
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+      fileBuffersRef.current = {};
+    };
+  }, [currentUserId, baseDir]);
+
+  // 3️⃣ Subscribe to Firebase messages
+  useEffect(() => {
+    if (!currentUserId || !chatId) return;
+
     const chatRef = ref(db, `chats/${chatId}/messages`);
     const unsubscribe = onValue(chatRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const msgs = Object.values(data).sort(
+        const msgs: any = Object.values(data).sort(
           (a: any, b: any) => a.timestamp - b.timestamp
         );
         setMessages(msgs);
+      } else {
+        setMessages([]);
       }
     });
+
     return () => unsubscribe();
-  }, [currentUserId]);
+  }, [currentUserId, chatId]);
 
   const sendMessage = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() || !chatId) return;
+
+    const msgForNotify = text;
     const chatRef = ref(db, `chats/${chatId}/messages`);
-    await push(chatRef, {
-      senderId: currentUserId,
-      receiverId,
-      text,
-      timestamp: Date.now(),
-    });
-    setText("");
-    await fetch(`${SEND_NOTIFY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+
+    try {
+      await push(chatRef, {
+        senderId: currentUserId,
         receiverId,
-        message: text,
-        senderName: "You",
-      }),
-    });
+        type: "text",
+        text: msgForNotify,
+        timestamp: Date.now(),
+      });
+      setText("");
+
+      // FCM notify
+      if (SEND_NOTIFY) {
+        await fetch(`${SEND_NOTIFY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            receiverId,
+            message: msgForNotify,
+            senderName: "",
+          }),
+        });
+      }
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
   };
 
-  const renderItem = ({ item }: any) => {
+  // 📎 pick & send file through Socket.IO (chunked)
+  const handleSendFile = async () => {
+    try {
+      if (!currentUserId || !receiverId || !chatId) return;
+      const socket = socketRef.current;
+      if (!socket || !socket.connected) {
+        console.warn("Socket not connected");
+        return;
+      }
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0)
+        return;
+
+      const asset = result.assets[0];
+      const originalUri = asset.uri;
+      const fileName = asset.name ?? `file_${Date.now()}`;
+
+      const safeName = fileName.replace(/\s+/g, "_");
+      const storageKey = `${chatId}_${Date.now()}_${safeName}`;
+      const localPath = `${baseDir}${storageKey}`;
+
+      // ensure we have some baseDir
+      if (!baseDir) {
+        console.error("No documentDirectory or cacheDirectory available");
+        return;
+      }
+
+      // copy to our app directory
+      await FileSystem.copyAsync({
+        from: originalUri,
+        to: localPath,
+      });
+
+      // read as base64
+      const base64 = await FileSystem.readAsStringAsync(localPath, {
+        encoding: "base64",
+      });
+      
+
+      const CHUNK_SIZE = 30000;
+      let index = 0;
+
+      for (let offset = 0; offset < base64.length; offset += CHUNK_SIZE) {
+        const chunk = base64.slice(offset, offset + CHUNK_SIZE);
+        const isLast = offset + CHUNK_SIZE >= base64.length;
+
+        socket.emit("file-chunk", {
+          chatId,
+          senderId: currentUserId,
+          receiverId,
+          storageKey,
+          fileName,
+          chunk,
+          chunkIndex: index,
+          isLast,
+        });
+
+        index++;
+      }
+
+      // Save file message metadata to Firebase
+      const chatRef = ref(db, `chats/${chatId}/messages`);
+      await push(chatRef, {
+        senderId: currentUserId,
+        receiverId,
+        type: "file",
+        fileName,
+        storageKey,
+        timestamp: Date.now(),
+      });
+
+      // optional notify for file
+      if (SEND_NOTIFY) {
+        try {
+          await fetch(`${SEND_NOTIFY}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              receiverId,
+              message: "sent you a file",
+              senderName: "",
+            }),
+          });
+        } catch (err) {
+          console.error("Error sending file notify:", err);
+        }
+      }
+    } catch (err) {
+      console.error("handleSendFile error:", err);
+    }
+  };
+
+  const renderItem = ({ item }: { item: ChatMessage }) => {
     const isSender = item.senderId === currentUserId;
+    const isFile = item.type === "file" && item.storageKey;
+
+    const fileUri =
+      isFile && baseDir ? `${baseDir}${item.storageKey}` : undefined;
+
+    const isImage =
+      isFile &&
+      item.fileName &&
+      /\.(png|jpe?g|gif|webp)$/i.test(item.fileName || "");
+
     return (
       <View
         style={[
@@ -109,13 +331,45 @@ export default function ChatScreen() {
             isSender ? styles.senderBubble : styles.receiverBubble,
           ]}
         >
-          <Text style={styles.messageText}>{item.text}</Text>
-          <Text style={styles.timeText}>
-            {new Date(item.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Text>
+          {isFile && fileUri ? (
+            <>
+              <Text style={styles.fileNameText}>
+                {item.fileName || "File"}
+              </Text>
+              {isImage ? (
+                <TouchableOpacity
+  onPress={() => {
+    navigation.navigate("ImageViewer", { uri: fileUri });
+  }}
+>
+  <Image 
+    source={{ uri: fileUri }} 
+    style={styles.fileImage}
+  />
+</TouchableOpacity>
+              ) : (
+                <Text style={styles.messageTextSmall}>
+                  (Tap to open from device storage)
+                </Text>
+              )}
+              <Text style={styles.timeText}>
+                {new Date(item.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.messageText}>{item.text}</Text>
+              <Text style={styles.timeText}>
+                {new Date(item.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </>
+          )}
         </View>
       </View>
     );
@@ -160,6 +414,14 @@ export default function ChatScreen() {
         {/* Input area */}
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
+            {/* 📎 attach inside input */}
+            <TouchableOpacity
+              onPress={handleSendFile}
+              style={styles.attachButton}
+            >
+              <Ionicons name="attach" size={20} color="#e5e7eb" />
+            </TouchableOpacity>
+
             <TextInput
               style={styles.input}
               placeholder="Type a message..."
@@ -241,6 +503,11 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
   },
+  messageTextSmall: {
+    color: "#cbd5e1",
+    fontSize: 12,
+    marginTop: 4,
+  },
   timeText: {
     fontSize: 11,
     color: "#cbd5e1",
@@ -265,8 +532,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#334155",
     borderRadius: 25,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  attachButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    marginRight: 4,
   },
   input: {
     flex: 1,
@@ -279,5 +551,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     marginLeft: 6,
+  },
+  fileNameText: {
+    color: "#e5e7eb",
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  fileImage: {
+    width: 170,
+    height: 170,
+    borderRadius: 12,
+    backgroundColor: "#020617",
   },
 });

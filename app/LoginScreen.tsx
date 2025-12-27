@@ -14,13 +14,19 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { FireBasedatabsetesting } from "./FireBasedatabsetesting";
+import { useAppDispatch } from "@/store/hooks";
+import { loginUser } from "@/store/slices/userSlice";
 //import {LOGIN_CONNECT,USER_ID} from "@env";
 interface LoginScreenProps {
   onLogin?: (userId: string) => void;
 }
 
+
+
+
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
-  const LOGIN_CONNECT = process.env.EXPO_PUBLIC_LOGIN_CONNECT;const USER_ID =process.env.EXPO_PUBLIC_USER_ID;
+  const dispatch = useAppDispatch()
+  const LOGIN_CONNECT = process.env.EXPO_PUBLIC_LOGIN_CONNECT_LOCAL ;const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 
 
   const [email, setEmail] = useState("");
@@ -28,26 +34,36 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
+  interface resp{
+
+  }
+
   const handleLogin = async () => {
     try {
-      console.log(LOGIN_CONNECT,USER_ID)
+      console.log(LOGIN_CONNECT,USER_ID,'log metadata')
       setLoading(true);
-      const response = await fetch(`${LOGIN_CONNECT}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await dispatch(loginUser({ email, password ,userType:'organizer'})).unwrap();
+      
+      console.log('after request');
+      
 
-      if (!response.ok) {
-        const error = await response.json();
+      if (!response.user.name) {
+        const error =  response.payload;
         throw new Error(error.error || "Login failed");
       }
 
-      const data = await response.json();
       Alert.alert("Success", "Logged in successfully!");
-      navigation.navigate("UsersListScreen");
+      console.log(response,'login user data');
+      if(response.user.userType ==='customer'){
+        navigation.navigate("Home");
+      }else{
+        navigation.navigate("organizerhome");
+      }
+      
+      
     } catch (err: any) {
+      console.log('error tab');
+      
       Alert.alert("Error", err.message);
     } finally {
       setLoading(false);

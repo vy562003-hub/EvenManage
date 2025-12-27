@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator,StyleSheet } from "react-native";
 import { useNavigation } from "expo-router";
 //import {USER_LIST} from "@env"
-const USER_LIST = process.env.EXPO_PUBLIC_USER_LIST;
+const USER_LIST = process.env.EXPO_PUBLIC_USER_LIST_LOCAL;
 
 export default function UserListScreen() {
   const [users, setUsers] = useState<any[]>([]);

@@ -27,6 +27,11 @@ const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
 const SOCKET_URL =
   process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL || "http://10.57.13.82:5000";
 
+
+console.log('sdsad');
+
+
+
 type ChatMessage = {
   senderId: string;
   receiverId: string;

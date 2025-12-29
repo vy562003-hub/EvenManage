@@ -5,25 +5,28 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAppDispatch,useAppSelector } from "@/store/hooks";
-import { updateBookingStatus,fetchOrganizerBookings } from "@/store/slices/organizersSlice";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  updateBookingStatus,
+  fetchOrganizerBookings,
+} from "@/store/slices/organizersSlice";
 
 export default function OrganizerBookings() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const [userId, setUserId] :any= useState(useAppSelector((state) => (state.user.userId)));
-  const [bookings, setBookings] = useState([]);
+  const [userId, setUserId]: any = useState(
+    useAppSelector((state) => state.user.userId)
+  );
+  const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] =
-    useState("All");
-
+  const [activeFilter, setActiveFilter] = useState("All");
 
   useEffect(() => {
     if (userId) loadBookings();
@@ -34,9 +37,9 @@ export default function OrganizerBookings() {
   // ----------------------------------
   const loadBookings = async () => {
     try {
-
-      
-      const data = await dispatch(fetchOrganizerBookings(userId)).unwrap();
+      const data = await dispatch(
+        fetchOrganizerBookings(userId)
+      ).unwrap();
       setBookings(data);
     } catch (err) {
       console.log("Fetch error:", err);
@@ -48,17 +51,19 @@ export default function OrganizerBookings() {
   // ----------------------------------
   // UPDATE BOOKING STATUS
   // ----------------------------------
-  const updateStatus = async (id:string, status:string) => {
+  const updateStatus = async (id: string, status: string) => {
     try {
-      const res = await dispatch(updateBookingStatus({bookingId:id,status})).unwrap();
+      const res = await dispatch(
+        updateBookingStatus({ bookingId: id, status })
+      ).unwrap();
 
       if (!res.status) {
         Alert.alert("Error", res as any);
         return;
       }
 
-      setBookings((prev:any) =>
-        prev.map((b:any) => (b._id === id ? { ...b, status } : b))
+      setBookings((prev: any) =>
+        prev.map((b: any) => (b._id === id ? { ...b, status } : b))
       );
     } catch (err) {
       Alert.alert("Error", "Status update failed");
@@ -70,19 +75,32 @@ export default function OrganizerBookings() {
   // ----------------------------------
   const filtered = useMemo(() => {
     if (activeFilter === "All") return bookings;
-    return bookings.filter((b:any) => b.status === activeFilter.toLowerCase());
+    return bookings.filter(
+      (b: any) => b.status === activeFilter.toLowerCase()
+    );
   }, [bookings, activeFilter]);
 
+  // LOADING STATE
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="large" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Booking Requests</Text>
 
       {/* FILTERS */}
@@ -99,7 +117,8 @@ export default function OrganizerBookings() {
             <Text
               style={[
                 styles.filterText,
-                activeFilter.toLowerCase() === f && styles.filterTextActive,
+                activeFilter.toLowerCase() === f &&
+                  styles.filterTextActive,
               ]}
             >
               {f.toUpperCase()}
@@ -111,7 +130,7 @@ export default function OrganizerBookings() {
       {/* LIST */}
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item: any) => item._id}
         renderItem={({ item }) => (
           <BookingCard
             booking={item}
@@ -134,14 +153,14 @@ export default function OrganizerBookings() {
           />
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 // ----------------------------
 // STATUS PILL
 // ----------------------------
-function StatusPill({ status }) {
+function StatusPill({ status }: { status: string }) {
   const color =
     status === "pending"
       ? "#f59e0b"
@@ -153,7 +172,9 @@ function StatusPill({ status }) {
 
   return (
     <View style={[styles.statusPill, { backgroundColor: color + "22" }]}>
-      <Text style={{ color, fontWeight: "600" }}>{status.toUpperCase()}</Text>
+      <Text style={{ color, fontWeight: "600" }}>
+        {status.toUpperCase()}
+      </Text>
     </View>
   );
 }
@@ -161,19 +182,29 @@ function StatusPill({ status }) {
 // ----------------------------
 // BOOKING CARD
 // ----------------------------
-function BookingCard({ booking, onUpdateStatus, onOpenDetails, onChat }) {
-  const total = booking.services.reduce((a, b) => a + b.price, 0);
+function BookingCard({
+  booking,
+  onUpdateStatus,
+  onOpenDetails,
+  onChat,
+}: any) {
+  const total = booking.services.reduce(
+    (a: number, b: any) => a + b.price,
+    0
+  );
 
   return (
     <View style={styles.card}>
       <TouchableOpacity onPress={onOpenDetails}>
         <View style={styles.topRow}>
-          <Text style={styles.customerName}>{booking.customerId?.name}</Text>
+          <Text style={styles.customerName}>
+            {booking.customerId?.name}
+          </Text>
           <StatusPill status={booking.status} />
         </View>
 
         <Text style={styles.services}>
-          {booking.services.map((s) => s.name).join(", ")}
+          {booking.services.map((s: any) => s.name).join(", ")}
         </Text>
 
         <Text style={styles.amount}>₹{total}</Text>
@@ -188,14 +219,18 @@ function BookingCard({ booking, onUpdateStatus, onOpenDetails, onChat }) {
           <>
             <TouchableOpacity
               style={styles.acceptBtn}
-              onPress={() => onUpdateStatus(booking._id, "confirmed")}
+              onPress={() =>
+                onUpdateStatus(booking._id, "confirmed")
+              }
             >
               <Text style={styles.actionText}>Accept</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.rejectBtn}
-              onPress={() => onUpdateStatus(booking._id, "cancelled")}
+              onPress={() =>
+                onUpdateStatus(booking._id, "cancelled")
+              }
             >
               <Text style={styles.actionText}>Reject</Text>
             </TouchableOpacity>
@@ -205,7 +240,9 @@ function BookingCard({ booking, onUpdateStatus, onOpenDetails, onChat }) {
         {booking.status === "confirmed" && (
           <TouchableOpacity
             style={styles.completeBtn}
-            onPress={() => onUpdateStatus(booking._id, "completed")}
+            onPress={() =>
+              onUpdateStatus(booking._id, "completed")
+            }
           >
             <Text style={styles.actionText}>Mark Completed</Text>
           </TouchableOpacity>
@@ -219,46 +256,78 @@ function BookingCard({ booking, onUpdateStatus, onOpenDetails, onChat }) {
 // STYLES
 // ----------------------------
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 16 },
-
-  filterRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: 12 },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginBottom: 12,
+  },
   filterChip: {
     padding: 8,
     borderRadius: 20,
     marginRight: 8,
     backgroundColor: "#eee",
   },
-  filterChipActive: { backgroundColor: "#0a7d28" },
-  filterText: { fontSize: 12 },
-  filterTextActive: { color: "#fff" },
-
+  filterChipActive: {
+    backgroundColor: "#0a7d28",
+  },
+  filterText: {
+    fontSize: 12,
+  },
+  filterTextActive: {
+    color: "#fff",
+  },
   card: {
     backgroundColor: "#f9fafb",
     padding: 14,
     borderRadius: 12,
     marginBottom: 16,
   },
-  topRow: { flexDirection: "row", justifyContent: "space-between" },
-  customerName: { fontSize: 17, fontWeight: "600" },
-  services: { marginTop: 6, color: "#555" },
-  amount: { marginTop: 6, fontWeight: "700", color: "#0a7d28" },
-
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  customerName: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  services: {
+    marginTop: 6,
+    color: "#555",
+  },
+  amount: {
+    marginTop: 6,
+    fontWeight: "700",
+    color: "#0a7d28",
+  },
   statusPill: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 20,
   },
-
   actions: {
     flexDirection: "row",
     marginTop: 12,
     justifyContent: "flex-end",
   },
-
-  actionText: { color: "#fff", fontWeight: "600" },
-
+  actionText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
   chatBtn: {
     backgroundColor: "#2563eb",
     paddingHorizontal: 12,
@@ -266,7 +335,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 8,
   },
-
   acceptBtn: {
     backgroundColor: "#16a34a",
     paddingHorizontal: 12,
@@ -274,14 +342,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 8,
   },
-
   rejectBtn: {
     backgroundColor: "#dc2626",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
   },
-
   completeBtn: {
     backgroundColor: "#0a7d28",
     paddingHorizontal: 12,

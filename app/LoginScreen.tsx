@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { FireBasedatabsetesting } from "./FireBasedatabsetesting";
+import { FireBasedatabsetesting } from "@/app/FireBasedatabsetesting";
 import { useAppDispatch } from "@/store/hooks";
 import { loginUser } from "@/store/slices/userSlice";
 //import {LOGIN_CONNECT,USER_ID} from "@env";
@@ -57,7 +57,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       if(response.user.userType ==='customer'){
         navigation.navigate("Home");
       }else{
-        navigation.navigate("organizerhome");
+        navigation.navigate("/Organizer/organizerhome");
       }
       
       

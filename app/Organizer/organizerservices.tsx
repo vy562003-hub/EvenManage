@@ -6,35 +6,32 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  SafeAreaView,
-  Alert
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useAppSelector,useAppDispatch } from "@/store/hooks";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { saveServicesAsync } from "@/store/slices/organizersSlice";
-
-
 
 export default function ServicesPage() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const [UserID,setUserID] = useState(useAppSelector((state) => (state.user.userId)));
+  const insets = useSafeAreaInsets();
 
-  
+  const [UserID, setUserID] = useState(
+    useAppSelector((state) => state.user.userId)
+  );
 
-  const [services, setServices] = useState<any[]>(useAppSelector((state) => (state.user.userdata.services)) || [] );
+  const [services, setServices] = useState<any[]>(
+    useAppSelector((state) => state.user.userdata.services) || []
+  );
   const [loading, setLoading] = useState(false);
 
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
-  
-
-  
 
   // ADD SERVICE
   const addService = () => {
-    console.log(services,newName,newPrice,'services');
-    
     if (!newName || !newPrice) {
       alert("Enter name and price");
       return;
@@ -58,13 +55,16 @@ export default function ServicesPage() {
   // SAVE TO BACKEND
   const saveServices = async () => {
     try {
-      const res = await dispatch(saveServicesAsync({userId:UserID,services})).unwrap();
+      const res = await dispatch(
+        saveServicesAsync({ userId: UserID, services })
+      ).unwrap();
 
       if (!res.services) {
         alert("Failed to save services");
         return;
       }
-      setServices(res.services)
+
+      setServices(res.services);
       alert("Services updated successfully!");
       router.back();
     } catch (err) {
@@ -72,16 +72,27 @@ export default function ServicesPage() {
     }
   };
 
+  // LOADING STATE
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <Text>Loading...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Manage Services</Text>
 
       {/* ADD NEW SERVICE */}
@@ -130,16 +141,27 @@ export default function ServicesPage() {
       <TouchableOpacity style={styles.saveBtn} onPress={saveServices}>
         <Text style={styles.saveText}>Save Services</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 // --------------------
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
-
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
   addBox: {
     marginBottom: 20,
     backgroundColor: "#f3f3f3",
@@ -160,8 +182,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  addBtnText: { color: "#fff", fontWeight: "600" },
-
+  addBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
   serviceRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -170,14 +194,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
-  serviceText: { fontSize: 16 },
+  serviceText: {
+    fontSize: 16,
+  },
   deleteBtn: {
     backgroundColor: "#ff3b30",
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
   },
-
   saveBtn: {
     marginTop: 15,
     backgroundColor: "green",
@@ -185,5 +210,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  saveText: { color: "#fff", fontSize: 17, fontWeight: "700" },
+  saveText: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "700",
+  },
 });

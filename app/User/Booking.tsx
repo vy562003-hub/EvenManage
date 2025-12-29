@@ -4,42 +4,47 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { fetchOrganizerById,setBigMedia } from "@/store/slices/organizersSlice";
-import { useAppDispatch,useAppSelector, } from "@/store/hooks";
-import { submitBooking, resetBookingState } from "@/store/slices/BookingSlice";
-
+import {
+  fetchOrganizerById,
+  setBigMedia,
+} from "@/store/slices/organizersSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  submitBooking,
+  resetBookingState,
+} from "@/store/slices/BookingSlice";
 import { fetchUser } from "@/store/slices/userSlice";
 
-
-// set redux for userid and handle booking 
 export default function BookingScreen() {
-  const dispatch:any = useAppDispatch();
+  const dispatch: any = useAppDispatch();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const { id } = useLocalSearchParams(); // organizerId
-  const router = useRouter();
 
-  const {selectedOrganizer:organizer,bigMedia,loading:ld} = useAppSelector((state) => (state.organizers))
-  const { userId:UserID } = useAppSelector(state => state.user);
+  const {
+    selectedOrganizer: organizer,
+    bigMedia,
+    loading: ld,
+  } = useAppSelector((state) => state.organizers);
 
+  const { userId: UserID } = useAppSelector((state) => state.user);
 
   const [loading, setLoading] = useState(ld);
-
-  
-
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
   const [note, setNote] = useState("");
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
-  // Fetch organize
+  // Fetch user
   const getUser = async () => {
     try {
       const data = await dispatch(fetchUser()).unwrap();
@@ -53,11 +58,12 @@ export default function BookingScreen() {
     const fetchOrganizer = async () => {
       try {
         await getUser();
-       const selectedOrganizer = await dispatch(fetchOrganizerById(id)).unwrap();
-       console.log(selectedOrganizer);
-       
-        if (organizer.gallery?.length > 0) {
-          dispatch(setBigMedia(organizer.gallery[0])); // full object
+        const selectedOrganizer = await dispatch(
+          fetchOrganizerById(id)
+        ).unwrap();
+
+        if (selectedOrganizer?.gallery?.length > 0) {
+          dispatch(setBigMedia(selectedOrganizer.gallery[0]));
         }
       } catch (err) {
         console.log("Error fetching organizer:", err);
@@ -67,13 +73,15 @@ export default function BookingScreen() {
     };
 
     fetchOrganizer();
-  }, [id,dispatch]);
+  }, [id, dispatch]);
 
   // Toggle service selection
   const toggleService = (srv: any) => {
     const exists = selectedServices.some((s) => s.name === srv.name);
     if (exists) {
-      setSelectedServices(selectedServices.filter((s) => s.name !== srv.name));
+      setSelectedServices(
+        selectedServices.filter((s) => s.name !== srv.name)
+      );
     } else {
       setSelectedServices([...selectedServices, srv]);
     }
@@ -88,7 +96,7 @@ export default function BookingScreen() {
       alert("Select at least one service");
       return;
     }
-  
+
     try {
       await dispatch(
         submitBooking({
@@ -99,7 +107,7 @@ export default function BookingScreen() {
           note,
         })
       ).unwrap();
-  
+
       alert("Booking request sent!");
       dispatch(resetBookingState());
       router.back();
@@ -108,18 +116,35 @@ export default function BookingScreen() {
     }
   };
 
+  // LOADING STATE
   if (loading || !organizer) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
+      <View
+        style={[
+          styles.centerContainer,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 8 }}>Loading booking...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 120, padding: 16 }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#fff",
+        paddingTop: insets.top,
+      }}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 120 + insets.bottom,
+        }}
+      >
         <Text style={styles.title}>Book {organizer.name}</Text>
 
         {/* Services */}
@@ -188,12 +213,17 @@ export default function BookingScreen() {
       </ScrollView>
 
       {/* Sticky button */}
-      <View style={styles.bottomBar}>
+      <View
+        style={[
+          styles.bottomBar,
+          { paddingBottom: insets.bottom },
+        ]}
+      >
         <TouchableOpacity style={styles.confirmBtn} onPress={handleBooking}>
           <Text style={styles.confirmText}>Confirm Booking</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -203,12 +233,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
-
-  sectionTitle: { fontSize: 16, fontWeight: "600", marginVertical: 8 },
-
-  chipWrap: { flexDirection: "row", flexWrap: "wrap" },
-
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 8,
+  },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
   serviceChip: {
     backgroundColor: "#f2f2f2",
     paddingVertical: 8,
@@ -220,16 +258,18 @@ const styles = StyleSheet.create({
   serviceChipActive: {
     backgroundColor: "#0a7d28",
   },
-  serviceChipText: { color: "#333" },
-
+  serviceChipText: {
+    color: "#333",
+  },
   dateBox: {
     padding: 12,
     backgroundColor: "#f2f2f2",
     borderRadius: 12,
     marginBottom: 12,
   },
-  dateText: { fontSize: 16 },
-
+  dateText: {
+    fontSize: 16,
+  },
   noteBox: {
     backgroundColor: "#f2f2f2",
     borderRadius: 12,
@@ -237,25 +277,22 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: "top",
   },
-
   totalText: {
     marginTop: 20,
     fontSize: 20,
     fontWeight: "bold",
     color: "#0a7d28",
   },
-
   bottomBar: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     padding: 14,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
   },
-
   confirmBtn: {
     backgroundColor: "#0a7d28",
     padding: 15,

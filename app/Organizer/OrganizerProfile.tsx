@@ -6,14 +6,17 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useAppDispatch,useAppSelector } from "@/store/hooks";
-import { uploadProfileImage,updateUserProfile } from "@/store/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  uploadProfileImage,
+  updateUserProfile,
+} from "@/store/slices/userSlice";
 import { fetchOrganizerById } from "@/store/slices/organizersSlice";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_ORGANIZER;
@@ -22,11 +25,14 @@ const USER_ID_API = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 export default function OrganizerProfile() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   // ---------------------
   // States
   // ---------------------
-  const [UserID, setUserID] = useState(useAppSelector((state) => (state.user.userId)));
+  const [UserID, setUserID] = useState(
+    useAppSelector((state) => state.user.userId)
+  );
 
   const [profilePic, setProfilePic] = useState("");
   const [name, setName] = useState("");
@@ -40,17 +46,15 @@ export default function OrganizerProfile() {
 
   const [loading, setLoading] = useState(true);
 
- 
-
   // ---------------------
   // Fetch Organizer Profile
   // ---------------------
   const loadProfile = async () => {
     try {
-      const data = await dispatch(fetchOrganizerById(UserID as string)).unwrap();
-      
-        console.log(data,'data');
-        
+      const data = await dispatch(
+        fetchOrganizerById(UserID as string)
+      ).unwrap();
+
       setProfilePic(data.profilePic);
       setName(data.name);
       setPhone(data.phone);
@@ -60,15 +64,15 @@ export default function OrganizerProfile() {
       // organizer-specific fields
       setLocation(data.location || "");
       setExperience(data.experience ? String(data.experience) : "");
-      setStartingPrice(data.startingPrice ? String(data.startingPrice) : "");
+      setStartingPrice(
+        data.startingPrice ? String(data.startingPrice) : ""
+      );
     } catch (err) {
       Alert.alert("Error", "Failed to load profile");
     } finally {
       setLoading(false);
     }
   };
-
-  
 
   useEffect(() => {
     if (UserID) loadProfile();
@@ -78,7 +82,7 @@ export default function OrganizerProfile() {
   // Pick profile image
   // ---------------------
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
@@ -91,10 +95,11 @@ export default function OrganizerProfile() {
 
   const uploadProfilePic = async (file: any) => {
     const uri = file.uri;
-    
 
     try {
-      const data = await dispatch(uploadProfileImage({userId:UserID,uri})).unwrap()
+      const data = await dispatch(
+        uploadProfileImage({ userId: UserID, uri })
+      ).unwrap();
 
       setProfilePic(data.profilePic);
       Alert.alert("Success", "Profile picture updated");
@@ -118,7 +123,9 @@ export default function OrganizerProfile() {
         startingPrice: Number(startingPrice),
       };
 
-      const res = await dispatch(updateUserProfile({userId:UserID,obj:body})).unwrap();
+      const res = await dispatch(
+        updateUserProfile({ userId: UserID, obj: body })
+      ).unwrap();
 
       if (res.name) {
         Alert.alert("Success", "Profile updated");
@@ -131,20 +138,38 @@ export default function OrganizerProfile() {
   };
 
   // ---------------------
-  // UI
+  // LOADING STATE
   // ---------------------
-
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <Text>Loading Profile...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
+  // ---------------------
+  // UI
+  // ---------------------
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#fff",
+        paddingTop: insets.top,
+      }}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: 100 + insets.bottom,
+        }}
+      >
         {/* Profile Image */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <Image
@@ -176,7 +201,11 @@ export default function OrganizerProfile() {
         />
 
         <Text style={styles.label}>Email</Text>
-        <TextInput style={styles.input} value={email} onChangeText={setEmail} />
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+        />
 
         <Text style={styles.label}>About</Text>
         <TextInput
@@ -225,7 +254,7 @@ export default function OrganizerProfile() {
           <Text style={styles.galleryText}>Manage Gallery</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -233,7 +262,11 @@ export default function OrganizerProfile() {
 // Styles
 // ---------------------
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   profilePic: {
     width: 120,
     height: 120,

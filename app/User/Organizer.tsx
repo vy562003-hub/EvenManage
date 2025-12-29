@@ -1,39 +1,32 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   ScrollView,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "expo-router";
 import { useRoute } from "@react-navigation/native";
-import { fetchOrganizerById,setBigMedia } from "@/store/slices/organizersSlice";
-import { useAppDispatch,useAppSelector, } from "@/store/hooks";
-
+import { fetchOrganizerById, setBigMedia } from "@/store/slices/organizersSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 // expo-video imports
 import { VideoView, useVideoPlayer } from "expo-video";
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL_ID;
-
 // =============================
 // COMPONENT: Big Media View
-// Only ONE video instance allowed
 // =============================
 function BigMediaView({ media }: any) {
   if (!media) return null;
 
-  // IMAGE
   if (media.type === "image") {
     return <Image source={{ uri: media.url }} style={styles.bigImage} />;
   }
 
-  // VIDEO — Only load player when video selected
   const player = useVideoPlayer(media.url, (p) => p.pause());
 
   return (
@@ -49,7 +42,6 @@ function BigMediaView({ media }: any) {
 
 // =============================
 // COMPONENT: Thumbnail
-// DOES NOT RENDER VIDEO PLAYER ❗
 // =============================
 function GalleryThumbnail({ item, isActive, onPress }: any) {
   const thumbnailStyle = [
@@ -65,7 +57,6 @@ function GalleryThumbnail({ item, isActive, onPress }: any) {
     );
   }
 
-  // VIDEO PLACEHOLDER (static)
   return (
     <TouchableOpacity onPress={onPress}>
       <View style={[thumbnailStyle, { justifyContent: "center" }]}>
@@ -79,26 +70,30 @@ function GalleryThumbnail({ item, isActive, onPress }: any) {
 // MAIN SCREEN
 // =============================
 export default function OrganizerDetails() {
-  const dispatch:any = useAppDispatch();
-
-  const router = useRoute();
+  const dispatch: any = useAppDispatch();
+  const route = useRoute();
   const navigator = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const { id, name } = "" || (router.params as { id: string; name: string });
+  const { id, name } = route.params as { id: string; name: string };
 
-  const {selectedOrganizer:organizer,bigMedia,loading:ld} = useAppSelector((state) => (state.organizers))
+  const {
+    selectedOrganizer: organizer,
+    bigMedia,
+    loading: ld,
+  } = useAppSelector((state) => state.organizers);
 
   const [loading, setLoading] = useState(ld);
 
   useEffect(() => {
     const fetchOrganizer = async () => {
       try {
-       const selectedOrganizer = await dispatch(fetchOrganizerById(id)).unwrap();
-       console.log(selectedOrganizer);
-       
-        if (organizer.gallery?.length > 0) {
-          dispatch(setBigMedia(organizer.gallery[0])); // full object
+        const selectedOrganizer = await dispatch(
+          fetchOrganizerById(id)
+        ).unwrap();
+
+        if (selectedOrganizer.gallery?.length > 0) {
+          dispatch(setBigMedia(selectedOrganizer.gallery[0]));
         }
       } catch (err) {
         console.log("Error fetching organizer:", err);
@@ -108,23 +103,34 @@ export default function OrganizerDetails() {
     };
 
     fetchOrganizer();
-  }, [id,dispatch]);
+  }, [id, dispatch]);
 
   if (loading || !organizer) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
+      <View
+        style={[
+          styles.centerContainer,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 8, color: "#666" }}>
           Loading organizer...
         </Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#fff",
+        paddingTop: insets.top,
+      }}
+    >
       <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
-        {/* BIG MEDIA VIEW */}
+        {/* BIG MEDIA */}
         <BigMediaView media={bigMedia} />
 
         {/* THUMBNAILS */}
@@ -145,7 +151,10 @@ export default function OrganizerDetails() {
 
         {/* HEADER */}
         <View style={styles.header}>
-          <Image source={{ uri: organizer.profilePic }} style={styles.profilePic} />
+          <Image
+            source={{ uri: organizer.profilePic }}
+            style={styles.profilePic}
+          />
 
           <View style={{ marginLeft: 12 }}>
             <Text style={styles.name}>{organizer.name}</Text>
@@ -154,7 +163,9 @@ export default function OrganizerDetails() {
               <Text style={styles.ratingText}>
                 {organizer.rating ? organizer.rating.toFixed(1) : "New"}
               </Text>
-              <Text style={styles.locationText}>• {organizer.location}</Text>
+              <Text style={styles.locationText}>
+                • {organizer.location}
+              </Text>
             </View>
           </View>
         </View>
@@ -181,7 +192,7 @@ export default function OrganizerDetails() {
         </View>
       </ScrollView>
 
-      {/* BOTTOM BUTTONS */}
+      {/* BOTTOM BAR */}
       <View
         style={[
           styles.bottomBar,
@@ -207,7 +218,7 @@ export default function OrganizerDetails() {
           <Text style={styles.chatText}>Chat</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -4,35 +4,28 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   StyleSheet,
   Alert,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Get from backend or AsyncStorage in real app
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
-const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
-
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 
 export default function ProfileScreen() {
-
-  const [UserID,setUserID] = useState();
-
-
-
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const [UserID, setUserID] = useState<any>();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  
   const getuser = async () => {
     try {
-      
-      console.log(USER_ID,"USERID");
-      
-      const response = await fetch( `${USER_ID}`, {
+      const response = await fetch(`${USER_ID}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -44,13 +37,7 @@ export default function ProfileScreen() {
       }
 
       const data = await response.json();
-      setUserID(data.userId)
-      console.log(data.userId)
-
-      console.log(UserID,'UserID');
-      
-
-      Alert.alert("User ID", data.userId);
+      setUserID(data.userId);
     } catch (err: any) {
       Alert.alert("Error", err.message);
     }
@@ -59,47 +46,54 @@ export default function ProfileScreen() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-
         await getuser();
-        console.log(`${API_BASE}/${UserID}`,"`${API_BASE}/user/${UserID}`");
-        
+
+        if (!UserID) return;
+
         const res = await fetch(`${API_BASE}/${UserID}`);
         const data = await res.json();
         setUser(data);
-        console.log(data,'data');
-        
       } catch (err) {
-        console.log(UserID,"UserID");
-
         console.log("Profile fetch error:", err);
-        console.log(UserID);
-
       } finally {
         setLoading(false);
-        console.log(UserID);
-        
       }
     };
 
     fetchUser();
   }, [UserID]);
 
+  // LOADING STATE
   if (loading || !user) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 10 }}>Loading Profile...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* PROFILE HEADER */}
       <View style={styles.header}>
         <Image
           source={{
-            uri: user.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png"  + "?t=" + Date.now()
+            uri:
+              user.profilePic ||
+              "https://cdn-icons-png.flaticon.com/512/149/149071.png" +
+                "?t=" +
+                Date.now(),
           }}
           style={styles.profileImage}
         />
@@ -130,18 +124,16 @@ export default function ProfileScreen() {
           <Text style={styles.btnSecondaryText}>My Bookings</Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity
           style={styles.btnLogout}
           onPress={() => {
-            // Clear session, tokens etc.
             router.replace("/LoginScreen");
           }}
         >
           <Text style={styles.btnLogoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -149,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 16,
+    paddingHorizontal: 16,
   },
 
   center: {

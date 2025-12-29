@@ -1,34 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet,Alert } from "react-native";
-import { useRouter,useNavigation } from "expo-router";
-import { useAppSelector,useAppDispatch } from "@/store/hooks";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter, useNavigation } from "expo-router";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchDashboardStats } from "@/store/slices/organizersSlice";
 
-
 export default function OrganizerDashboard() {
+  
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const naviagtor = useNavigation()
-  const {userId:UserID}:any = useAppSelector((state) => (state.user));
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
-
+  const { userId: UserID }: any = useAppSelector((state) => state.user);
 
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     completed: 0,
   });
- 
+
   useEffect(() => {
-    loadStats();
+    if (UserID) {
+      loadStats();
+    }
   }, [UserID]);
 
   const loadStats = async () => {
     try {
-      
-      const data = await  dispatch(fetchDashboardStats(UserID)).unwrap();
-      console.log();
-
+      const data = await dispatch(fetchDashboardStats(UserID)).unwrap();
       setStats(data);
     } catch (err) {
       console.log("Dashboard error:", err);
@@ -36,7 +36,15 @@ export default function OrganizerDashboard() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <Text style={styles.title}>Organizer Dashboard</Text>
 
       <View style={styles.card}>
@@ -45,7 +53,6 @@ export default function OrganizerDashboard() {
         <Text style={styles.stat}>Completed: {stats.completed}</Text>
       </View>
 
-      {/* Buttons */}
       <TouchableOpacity
         style={styles.btn}
         onPress={() => router.push("/OrganizerBookings")}
@@ -62,7 +69,7 @@ export default function OrganizerDashboard() {
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => naviagtor.navigate("organizergallery")}
+        onPress={() => navigation.navigate("organizergallery" as never)}
       >
         <Text style={styles.btnText}>Manage Gallery</Text>
       </TouchableOpacity>
@@ -73,25 +80,40 @@ export default function OrganizerDashboard() {
       >
         <Text style={styles.btnText}>View Profile</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 26, fontWeight: "700", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "700",
+    marginBottom: 20,
+  },
   card: {
     padding: 20,
     backgroundColor: "#f3f3f3",
     borderRadius: 12,
     marginBottom: 20,
   },
-  stat: { fontSize: 18, marginVertical: 3 },
+  stat: {
+    fontSize: 18,
+    marginVertical: 3,
+  },
   btn: {
     backgroundColor: "#0077ff",
     padding: 14,
     borderRadius: 10,
     marginBottom: 10,
   },
-  btnText: { color: "#fff", fontSize: 16, textAlign: "center" },
+  btnText: {
+    color: "#fff",
+    fontSize: 16,
+    textAlign: "center",
+  },
 });

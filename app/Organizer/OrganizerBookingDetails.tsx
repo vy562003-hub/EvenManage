@@ -2,29 +2,32 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   Linking,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAppDispatch,useAppSelector } from "@/store/hooks";
-import { uploadBookingBill,updateBookingStatus } from "@/store/slices/organizersSlice";
+import { useAppDispatch } from "@/store/hooks";
+import {
+  uploadBookingBill,
+  updateBookingStatus,
+} from "@/store/slices/organizersSlice";
 
 import * as DocumentPicker from "expo-document-picker";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE_ORGANIZER;
 
 export default function BookingDetails() {
-
   const dispatch = useAppDispatch();
-  
+  const insets = useSafeAreaInsets();
+
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const [booking, setBooking] = useState(null);
+  const [booking, setBooking] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
 
   const loadBooking = async () => {
@@ -41,10 +44,9 @@ export default function BookingDetails() {
     loadBooking();
   }, []);
 
-  const updateStatus = async (status) => {
+  const updateStatus = async (status: string) => {
     try {
-      await dispatch(updateBookingStatus({bookingId:id,status}))
-
+      await dispatch(updateBookingStatus({ bookingId: id, status }));
       Alert.alert("Success", `Booking marked as ${status}`);
       loadBooking();
     } catch (err) {
@@ -64,12 +66,12 @@ export default function BookingDetails() {
       if (file.canceled) return;
 
       const asset = file.assets[0];
-
-     
-
       setUploading(true);
 
-      const data = await dispatch(uploadBookingBill({bookingId:id,file:asset})).unwrap();
+      const data = await dispatch(
+        uploadBookingBill({ bookingId: id, file: asset })
+      ).unwrap();
+
       setUploading(false);
 
       if (!data.ok) {
@@ -86,18 +88,29 @@ export default function BookingDetails() {
     }
   };
 
+  // LOADING STATE
   if (!booking) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <Text>Loading booking...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
-  const total = booking.services.reduce((a, b) => a + b.price, 0);
+  const total = booking.services.reduce((a: number, b: any) => a + b.price, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Booking Details</Text>
 
       <Text style={styles.label}>Customer:</Text>
@@ -105,7 +118,7 @@ export default function BookingDetails() {
 
       <Text style={styles.label}>Services:</Text>
       <Text style={styles.value}>
-        {booking.services.map((s) => s.name).join(", ")}
+        {booking.services.map((s: any) => s.name).join(", ")}
       </Text>
 
       <Text style={styles.label}>Total Price:</Text>
@@ -117,23 +130,20 @@ export default function BookingDetails() {
       </Text>
 
       <Text style={styles.label}>Notes:</Text>
-      <Text style={styles.value}>{booking.note || "No note provided."}</Text>
+      <Text style={styles.value}>
+        {booking.note || "No note provided."}
+      </Text>
 
       <View style={{ marginTop: 20 }}>
         <Text style={styles.label}>Bill:</Text>
 
         {booking.billUrl ? (
-          <>
-            <TouchableOpacity
-              style={styles.viewBillBtn}
-              onPress={() => {
-                console.log(booking.billUrl,"Billurl");
-                
-                return Linking.openURL(booking.billUrl)}}
-            >
-              <Text style={styles.actionText}>View Bill</Text>
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity
+            style={styles.viewBillBtn}
+            onPress={() => Linking.openURL(booking.billUrl)}
+          >
+            <Text style={styles.actionText}>View Bill</Text>
+          </TouchableOpacity>
         ) : (
           <Text style={styles.value}>No bill uploaded yet.</Text>
         )}
@@ -176,7 +186,7 @@ export default function BookingDetails() {
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -184,18 +194,35 @@ export default function BookingDetails() {
 // STYLES
 // --------------------
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { padding: 16, backgroundColor: "#fff", flex: 1 },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 20 },
-
-  label: { fontSize: 14, fontWeight: "700", marginTop: 12 },
-  value: { fontSize: 15, color: "#444", marginTop: 4 },
-
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+    flex: 1,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 12,
+  },
+  value: {
+    fontSize: 15,
+    color: "#444",
+    marginTop: 4,
+  },
   actions: {
     flexDirection: "row",
     marginTop: 24,
   },
-
   chatBtn: {
     padding: 12,
     backgroundColor: "#2563eb",
@@ -211,7 +238,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
-
   uploadBtn: {
     padding: 12,
     backgroundColor: "#ea580c",
@@ -219,7 +245,6 @@ const styles = StyleSheet.create({
     marginTop: 14,
     alignItems: "center",
   },
-
   viewBillBtn: {
     padding: 12,
     backgroundColor: "#7c3aed",

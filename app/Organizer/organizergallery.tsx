@@ -6,43 +6,34 @@ import {
   Image,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useAppSelector,useAppDispatch } from "@/store/hooks";
-import { uploadOrganizerMedia,deleteOrganizerMedia } from "@/store/slices/organizersSlice";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  uploadOrganizerMedia,
+  deleteOrganizerMedia,
+} from "@/store/slices/organizersSlice";
 
 export default function ManageGallery() {
   const dispatch = useAppDispatch();
-  const [UserID, setUserID] = useState(useAppSelector((state)=>(state.user.userId)));
-  const [gallery, setGallery] = useState<any[]>(useAppSelector((state) => (state.user.userdata.gallery)));
+  const insets = useSafeAreaInsets();
+
+  const [UserID, setUserID] = useState(
+    useAppSelector((state) => state.user.userId)
+  );
+  const [gallery, setGallery] = useState<any[]>(
+    useAppSelector((state) => state.user.userdata.gallery)
+  );
   const [loading, setLoading] = useState(false);
-  const [videoSource,setvideoSource] = useState('');
-
-  
-
-    console.log(gallery,'before update');
-    
-
-  
-
-  // ----------------------------
-  // GET USER ID FIRST
-  // ----------------------------
-  
-
-  // ----------------------------
-  // LOAD GALLERY AFTER USERID
-  // ----------------------------
-  
 
   // ----------------------------
   // PICK IMAGE OR VIDEO
   // ----------------------------
   const pickMedia = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: false,
       quality: 1,
@@ -57,13 +48,13 @@ export default function ManageGallery() {
   // UPLOAD MEDIA
   // ----------------------------
   const uploadMedia = async (file: any) => {
-    try{
-   const updated = await  dispatch(uploadOrganizerMedia({userId:UserID,file})).unwrap();
-      setGallery(updated);
+    try {
+      const updated = await dispatch(
+        uploadOrganizerMedia({ userId: UserID, file })
+      ).unwrap();
 
+      setGallery(updated);
       Alert.alert("Success", "Uploaded successfully!");
-      console.log(gallery,' gallery after update ');
-      
     } catch (err) {
       console.log("Upload media error:", err);
       Alert.alert("Upload failed!");
@@ -75,10 +66,11 @@ export default function ManageGallery() {
   // ----------------------------
   const deleteMedia = async (url: string) => {
     try {
-      const updated = await dispatch(deleteOrganizerMedia({userId:UserID,url})).unwrap()
+      const updated = await dispatch(
+        deleteOrganizerMedia({ userId: UserID, url })
+      ).unwrap();
 
       setGallery(updated);
-
       Alert.alert("Removed", "Media deleted");
     } catch (err) {
       console.log("Delete media error:", err);
@@ -90,22 +82,25 @@ export default function ManageGallery() {
   // ----------------------------
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <Text>Loading gallery...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
-
-
-  const GalleryItem = ({ item, deleteMedia }: any) => {
+  // ----------------------------
+  // GALLERY ITEM
+  // ----------------------------
+  const GalleryItem = ({ item }: any) => {
     const player = useVideoPlayer(item.url, (player) => {
       player.pause();
     });
 
-    console.log(item.url,'item.url');
-    
-  
     return (
       <View style={styles.mediaBox}>
         {item.type === "image" ? (
@@ -120,7 +115,7 @@ export default function ManageGallery() {
             contentFit="cover"
           />
         )}
-  
+
         <TouchableOpacity
           style={styles.deleteBtn}
           onPress={() => deleteMedia(item.url)}
@@ -131,14 +126,16 @@ export default function ManageGallery() {
     );
   };
 
-  
-
-
   // ----------------------------
   // MAIN UI
   // ----------------------------
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Manage Gallery</Text>
 
       <TouchableOpacity style={styles.addBtn} onPress={pickMedia}>
@@ -146,14 +143,12 @@ export default function ManageGallery() {
       </TouchableOpacity>
 
       <FlatList
-  numColumns={3}
-  data={gallery}
-  keyExtractor={(_, i) => i.toString()}
-  renderItem={({ item }) => (
-    <GalleryItem item={item} deleteMedia={deleteMedia} />
-  )}
-/>
-    </SafeAreaView>
+        numColumns={3}
+        data={gallery}
+        keyExtractor={(_, i) => i.toString()}
+        renderItem={({ item }) => <GalleryItem item={item} />}
+      />
+    </View>
   );
 }
 
@@ -161,10 +156,21 @@ export default function ManageGallery() {
 // STYLES
 // ----------------------------
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 16 },
-
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
   addBtn: {
     backgroundColor: "#0a7d28",
     padding: 14,
@@ -172,8 +178,11 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     alignItems: "center",
   },
-  addText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-
+  addText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   mediaBox: {
     width: "30%",
     height: 130,
@@ -183,12 +192,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
   },
-
   media: {
     width: "100%",
     height: "100%",
   },
-
   deleteBtn: {
     position: "absolute",
     top: 6,

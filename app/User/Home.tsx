@@ -6,28 +6,24 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  SafeAreaView,
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useNavigation } from "expo-router";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 
-import { useAppDispatch,useAppSelector } from "@/store/hooks";
-import { fetchOrganizers } from "../store/slices/organizersSlice";
-
-
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchOrganizers } from "../../store/slices/organizersSlice";
 
 export default function HomeScreen() {
-
-  const dispatch:any = useAppDispatch();
+  const dispatch: any = useAppDispatch();
   const navigator = useNavigation();
-  const [activeFilter, setActiveFilter] = useState("All");
-
-  
   const router = useRouter();
-  const {list:organizers,loading:ld} = useAppSelector(
+  const insets = useSafeAreaInsets();
+
+  const [activeFilter, setActiveFilter] = useState("All");
+  const { list: organizers, loading: ld } = useAppSelector(
     (state) => state.organizers
   );
   const [loading, setLoading] = useState(ld);
@@ -37,7 +33,6 @@ export default function HomeScreen() {
     const fetchOrganizer = async () => {
       try {
         await dispatch(fetchOrganizers());
-        console.log("Fetched successfully");
       } catch (err) {
         console.error(err);
       } finally {
@@ -50,67 +45,77 @@ export default function HomeScreen() {
 
   const filtered = useMemo(() => {
     let list = [...organizers];
-  
-    // 1️⃣ Text search
+
+    // 🔍 Text search
     const q = search.toLowerCase();
     if (q) {
-      list = list.filter((org) => {
+      list = list.filter((org: any) => {
         const name = org.name?.toLowerCase() || "";
         const location = org.location?.toLowerCase() || "";
         const services = (org.services || [])
           .map((s: any) => s.name?.toLowerCase())
           .join(" ");
-  
+
         return (
-          name.includes(q) || location.includes(q) || services.includes(q)
+          name.includes(q) ||
+          location.includes(q) ||
+          services.includes(q)
         );
       });
     }
-  
-    // 2️⃣ Active Filter logic
+
+    // 🎯 Filters
     if (activeFilter === "Top Rated") {
-      list = list.filter((org) => org.rating >= 4.5);
+      list = list.filter((org: any) => org.rating >= 4.5);
     }
-  
+
     if (activeFilter === "Budget") {
-      list = list.filter((org) => org.priceMin && org.priceMin <= 10000);
+      list = list.filter(
+        (org: any) => org.priceMin && org.priceMin <= 10000
+      );
     }
-  
+
     if (activeFilter === "Nearby") {
-      list = list.filter((org) =>
+      list = list.filter((org: any) =>
         org.location?.toLowerCase().includes("mumbai")
       );
-      // You can replace "mumbai" with user's actual location later
     }
-  
+
     return list;
   }, [search, activeFilter, organizers]);
-  
 
+  // LOADING STATE
   if (loading) {
     return (
-      <SafeAreaView style={styles.centerContainer}>
+      <View
+        style={[
+          styles.centerContainer,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator />
         <Text style={styles.loadingText}>Loading organizers...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: "#ffffff",
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
+    >
       {/* Header */}
       <View style={styles.header}>
-      <TouchableOpacity
-      onPress={() => {navigator.navigate('Profile')}}
-      style={[
-        styles.chip,
-        false && { backgroundColor: "#0a7d28" }
-      ]}
-    >
-      <Text style={[styles.chipText, false && { color: "#fff" }]}>
-        Profile
-      </Text>
-    </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => navigator.navigate("Profile")}
+          style={styles.chip}
+        >
+          <Text style={styles.chipText}>Profile</Text>
+        </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Find Event Organizers</Text>
         <Text style={styles.headerSubtitle}>
@@ -128,43 +133,34 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Filter Chips */}
+      {/* Filters */}
       <View style={styles.filterRow}>
-  <FilterChip
-    label="All"
-    active={activeFilter === "All"}
-    onPress={() => setActiveFilter("All")}
-  />
-  <FilterChip
-    label="Top Rated"
-    active={activeFilter === "Top Rated"}
-    onPress={() => setActiveFilter("Top Rated")}
-  />
-  <FilterChip
-    label="Budget"
-    active={activeFilter === "Budget"}
-    onPress={() => setActiveFilter("Budget")}
-  />
-  <FilterChip
-    label="Nearby"
-    active={activeFilter === "Nearby"}
-    onPress={() => setActiveFilter("Nearby")}
-  />
-</View>
-
+        {["All", "Top Rated", "Budget", "Nearby"].map((f) => (
+          <FilterChip
+            key={f}
+            label={f}
+            active={activeFilter === f}
+            onPress={() => setActiveFilter(f)}
+          />
+        ))}
+      </View>
 
       {/* Organizer List */}
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+        keyExtractor={(item: any) => item._id}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: 24,
+        }}
         renderItem={({ item }) => (
           <OrganizerCard
             organizer={item}
-            onPress={() =>{
-              console.log(item.name,'item._id');
-              navigator.navigate('Organizer',{id: item._id ,name:item.name})
-              }
+            onPress={() =>
+              navigator.navigate("Organizer", {
+                id: item._id,
+                name: item.name,
+              })
             }
           />
         )}
@@ -176,7 +172,7 @@ export default function HomeScreen() {
           </View>
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -186,7 +182,7 @@ function FilterChip({ label, active, onPress }: any) {
       onPress={onPress}
       style={[
         styles.chip,
-        active && { backgroundColor: "#0a7d28" }
+        active && { backgroundColor: "#0a7d28" },
       ]}
     >
       <Text style={[styles.chipText, active && { color: "#fff" }]}>
@@ -195,7 +191,6 @@ function FilterChip({ label, active, onPress }: any) {
     </TouchableOpacity>
   );
 }
-
 
 function OrganizerCard({
   organizer,
@@ -229,8 +224,7 @@ function OrganizerCard({
       : "Price not specified";
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.card} activeOpacity={0.8}>
-      {/* Images */}
+    <TouchableOpacity onPress={onPress} style={styles.card}>
       <View style={styles.imageRow}>
         <Image
           source={
@@ -250,14 +244,15 @@ function OrganizerCard({
         )}
       </View>
 
-      {/* Text info */}
       <Text numberOfLines={1} style={styles.cardTitle}>
         {name}
       </Text>
 
       <View style={styles.ratingRow}>
         <Text style={styles.star}>⭐</Text>
-        <Text style={styles.ratingText}>{rating ? rating.toFixed(1) : "New"}</Text>
+        <Text style={styles.ratingText}>
+          {rating ? rating.toFixed(1) : "New"}
+        </Text>
         {location ? (
           <Text style={styles.locationText} numberOfLines={1}>
             • {location}
@@ -275,36 +270,21 @@ function OrganizerCard({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-
+  container: { flex: 1, backgroundColor: "#ffffff" },
   centerContainer: {
     flex: 1,
     backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },
-
-  loadingText: {
-    marginTop: 8,
-    color: "#666",
-  },
+  loadingText: { marginTop: 8, color: "#666" },
 
   header: {
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: 8,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  headerSubtitle: {
-    marginTop: 4,
-    color: "#666",
-  },
+  headerTitle: { fontSize: 22, fontWeight: "bold" },
+  headerSubtitle: { marginTop: 4, color: "#666" },
 
   searchBoxContainer: {
     paddingHorizontal: 16,
@@ -329,10 +309,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
   },
-  chipText: {
-    fontSize: 12,
-    color: "#555",
-  },
+  chipText: { fontSize: 12, color: "#555" },
 
   card: {
     backgroundColor: "#fff",
@@ -342,10 +319,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
 
-  imageRow: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
+  imageRow: { flexDirection: "row", marginBottom: 12 },
   mainImage: {
     width: 96,
     height: 96,
@@ -360,46 +334,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  emptyGalleryText: {
-    fontSize: 10,
-    color: "#888",
-  },
+  emptyGalleryText: { fontSize: 10, color: "#888" },
 
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  cardTitle: { fontSize: 18, fontWeight: "600" },
 
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
   },
-  star: {
-    color: "#f5b50a",
-    marginRight: 4,
-  },
-  ratingText: {
-    color: "#333",
-    marginRight: 6,
-  },
-  locationText: {
-    color: "#777",
-  },
+  star: { color: "#f5b50a", marginRight: 4 },
+  ratingText: { color: "#333", marginRight: 6 },
+  locationText: { color: "#777" },
 
-  serviceText: {
-    color: "#555",
-    marginTop: 4,
-  },
-
+  serviceText: { color: "#555", marginTop: 4 },
   priceText: {
     color: "#0a7d28",
     fontWeight: "600",
     marginTop: 4,
   },
 
-  noResultText: {
-    textAlign: "center",
-    color: "#777",
-  },
+  noResultText: { textAlign: "center", color: "#777" },
 });

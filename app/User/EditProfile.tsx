@@ -5,28 +5,31 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Alert,
   ActivityIndicator,
   Image,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-import { useAppDispatch,useAppSelector } from "@/store/hooks";
-
-import {   fetchUserProfile,updateUserProfile,uploadProfileImage } from "@/store/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import {
+  fetchUserProfile,
+  updateUserProfile,
+  uploadProfileImage,
+} from "@/store/slices/userSlice";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
-const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
-
+const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 
 export default function EditProfile() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  // Replace this with AsyncStorage or your actual login state
-  const {userId:UserID,userdata}:any = useAppSelector((state) => (state.user));
-
+  const { userId: UserID, userdata }: any = useAppSelector(
+    (state) => state.user
+  );
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -38,14 +41,11 @@ export default function EditProfile() {
   // LOAD PROFILE
   useEffect(() => {
     const fetchProfile = async () => {
-      try {   
-        console.log(UserID,'user');
-             
-
+      try {
         setUser(userdata);
-        setName(userdata.name);
-        setPhone(userdata.phone);
-        setEmail(userdata.email);
+        setName(userdata?.name || "");
+        setPhone(userdata?.phone || "");
+        setEmail(userdata?.email || "");
       } catch (err) {
         console.log("Profile fetch error:", err);
       } finally {
@@ -54,11 +54,11 @@ export default function EditProfile() {
     };
 
     fetchProfile();
-  }, [UserID,dispatch]);
+  }, [UserID, dispatch]);
 
   // PICK IMAGE FROM GALLERY
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
@@ -74,51 +74,37 @@ export default function EditProfile() {
 
   // UPLOAD TO BACKEND
   const uploadImage = async (uri: string) => {
-
-    
-
     try {
-
       await dispatch(
         uploadProfileImage({
           userId: UserID,
           uri,
         })
       ).unwrap();
-  
-     setUser(userdata);
-  
-        alert("Profile picture updated!");
 
-      
-
-     
-
+      setUser(userdata);
+      alert("Profile picture updated!");
     } catch (err) {
-
       console.log("Upload error:", err);
       alert("Upload failed");
-
     }
   };
 
   // SAVE CHANGES
   const handleSave = async () => {
     try {
-
       const res = await dispatch(
         updateUserProfile({
           userId: UserID,
-          obj:{name,
-          phone,
-          email}
+          obj: {
+            name,
+            phone,
+            email,
+          },
         })
       ).unwrap();
 
-      console.log(res.name,'user_payload');
-      
-
-      if (!res._id) {
+      if (!res?._id) {
         alert("Failed to update");
         return;
       }
@@ -130,17 +116,28 @@ export default function EditProfile() {
     }
   };
 
+  // LOADING STATE
   if (loading || !user) {
     return (
-      <SafeAreaView style={styles.center}>
+      <View
+        style={[
+          styles.center,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 10 }}>Loading...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Text style={styles.title}>Edit Profile</Text>
 
       {/* PROFILE IMAGE */}
@@ -149,7 +146,9 @@ export default function EditProfile() {
           source={{
             uri:
               user.profilePic ||
-              "https://cdn-icons-png.flaticon.com/512/149/149071.png"  + "?t=" + Date.now()
+              "https://cdn-icons-png.flaticon.com/512/149/149071.png" +
+                "?t=" +
+                Date.now(),
           }}
           style={styles.profileImage}
         />
@@ -158,19 +157,11 @@ export default function EditProfile() {
 
       {/* NAME */}
       <Text style={styles.label}>Full Name</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-      />
+      <TextInput style={styles.input} value={name} onChangeText={setName} />
 
       {/* EMAIL */}
       <Text style={styles.label}>Email</Text>
-      <TextInput
-        style={styles.input}
-        value={email}
-        editable={false}
-      />
+      <TextInput style={styles.input} value={email} editable={false} />
 
       {/* PHONE */}
       <Text style={styles.label}>Phone</Text>
@@ -187,25 +178,48 @@ export default function EditProfile() {
       </TouchableOpacity>
 
       {/* CANCEL */}
-      <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
+      <TouchableOpacity
+        style={styles.cancelBtn}
+        onPress={() => router.back()}
+      >
         <Text style={styles.cancelText}>Cancel</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 20 },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 20,
+  },
   profileImage: {
     width: 110,
     height: 110,
     borderRadius: 60,
     marginBottom: 5,
   },
-  changePhoto: { textAlign: "center", color: "#0077ff", marginBottom: 20 },
-  label: { fontSize: 14, color: "#444", marginBottom: 6 },
+  changePhoto: {
+    textAlign: "center",
+    color: "#0077ff",
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    color: "#444",
+    marginBottom: 6,
+  },
   input: {
     backgroundColor: "#f2f2f2",
     padding: 12,
@@ -218,7 +232,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  saveText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  saveText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   cancelBtn: {
     padding: 14,
     marginTop: 10,
@@ -226,5 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  cancelText: { color: "#333" },
+  cancelText: {
+    color: "#333",
+  },
 });

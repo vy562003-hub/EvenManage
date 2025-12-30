@@ -111,7 +111,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigator.navigate("Profile")}
+          onPress={() => navigator.navigate("User/Profile")}
           style={styles.chip}
         >
           <Text style={styles.chipText}>Profile</Text>
@@ -157,7 +157,7 @@ export default function HomeScreen() {
           <OrganizerCard
             organizer={item}
             onPress={() =>
-              navigator.navigate("Organizer", {
+              navigator.navigate("User/Organizer", {
                 id: item._id,
                 name: item.name,
               })
@@ -228,9 +228,8 @@ function OrganizerCard({
       <View style={styles.imageRow}>
         <Image
           source={
-            profilePic
-              ? { uri: profilePic }
-              : require("../assets/images/placeholder.png")
+            { uri: profilePic }
+              
           }
           style={styles.mainImage}
         />

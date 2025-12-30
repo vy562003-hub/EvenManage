@@ -201,7 +201,7 @@ export default function OrganizerDetails() {
       >
         <TouchableOpacity
           style={styles.bookBtn}
-          onPress={() => navigator.navigate("Booking", { id })}
+          onPress={() => navigator.navigate("User/Booking", { id })}
         >
           <Text style={styles.bookText}>Book Now</Text>
         </TouchableOpacity>

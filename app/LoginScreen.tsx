@@ -55,9 +55,9 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       Alert.alert("Success", "Logged in successfully!");
       console.log(response,'login user data');
       if(response.user.userType ==='customer'){
-        navigation.navigate("Home");
+        navigation.navigate("User/Home");
       }else{
-        navigation.navigate("/Organizer/organizerhome");
+        navigation.navigate("Organizer/organizerhome");
       }
       
       

@@ -24,7 +24,7 @@ import { useNavigation } from "expo-router";
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
 const SOCKET_URL =
-  process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL || "http://10.57.13.82:5000";
+  process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL || "https://eventmanage.westindia.azurecontainerapps.io";
 
 type ChatMessage = {
   senderId: string;

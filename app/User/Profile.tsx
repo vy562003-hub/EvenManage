@@ -109,7 +109,7 @@ export default function ProfileScreen() {
           style={styles.btnPrimary}
           onPress={() =>
             router.push({
-              pathname: "/EditProfile",
+              pathname: "User/EditProfile",
               params: { id: UserID },
             })
           }
@@ -119,7 +119,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.btnSecondary}
-          onPress={() => router.push("/History")}
+          onPress={() => router.push("User/History")}
         >
           <Text style={styles.btnSecondaryText}>My Bookings</Text>
         </TouchableOpacity>
@@ -127,7 +127,7 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={styles.btnLogout}
           onPress={() => {
-            router.replace("/LoginScreen");
+            router.replace("LoginScreen");
           }}
         >
           <Text style={styles.btnLogoutText}>Logout</Text>

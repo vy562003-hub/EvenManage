@@ -174,9 +174,8 @@ export default function OrganizerProfile() {
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <Image
             source={
-              profilePic
-                ? { uri: profilePic }
-                : require("../assets/images/placeholder.png")
+             { uri: profilePic }
+                
             }
             style={styles.profilePic}
           />
@@ -249,7 +248,7 @@ export default function OrganizerProfile() {
         {/* MANAGE GALLERY */}
         <TouchableOpacity
           style={styles.galleryBtn}
-          onPress={() => router.push("/organizergallery")}
+          onPress={() => router.push("/Organizer/organizergallery")}
         >
           <Text style={styles.galleryText}>Manage Gallery</Text>
         </TouchableOpacity>

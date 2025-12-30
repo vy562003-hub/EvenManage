@@ -137,7 +137,7 @@ export default function OrganizerBookings() {
             onUpdateStatus={updateStatus}
             onOpenDetails={() =>
               router.push({
-                pathname: "/OrganizerBookingDetails",
+                pathname: "/Organizer/OrganizerBookingDetails",
                 params: { id: item._id },
               })
             }

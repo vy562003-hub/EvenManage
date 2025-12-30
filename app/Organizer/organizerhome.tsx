@@ -55,28 +55,28 @@ export default function OrganizerDashboard() {
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => router.push("/OrganizerBookings")}
+        onPress={() => router.push("/Organizer/OrganizerBookings")}
       >
         <Text style={styles.btnText}>View Booking Requests</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => router.push("/organizerservices")}
+        onPress={() => router.push("/Organizer/organizerservices")}
       >
         <Text style={styles.btnText}>Manage Services</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => navigation.navigate("organizergallery" as never)}
+        onPress={() => navigation.navigate("Organizer/organizergallery" as never)}
       >
         <Text style={styles.btnText}>Manage Gallery</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.btn}
-        onPress={() => router.push("/OrganizerProfile")}
+        onPress={() => router.push("/Organizer/OrganizerProfile")}
       >
         <Text style={styles.btnText}>View Profile</Text>
       </TouchableOpacity>

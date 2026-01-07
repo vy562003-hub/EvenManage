@@ -89,6 +89,8 @@ const bookingSlice = createSlice({
     },
     extraReducers: (builder) => {
       builder
+
+      // add here also update user bookings 
         .addCase(submitBooking.pending, (state) => {
           state.loading = true;
           state.error = null;

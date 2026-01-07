@@ -16,6 +16,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { FireBasedatabsetesting } from "@/app/FireBasedatabsetesting";
 import { useAppDispatch } from "@/store/hooks";
 import { loginUser } from "@/store/slices/userSlice";
+
+import { useRouter } from 'expo-router';
 //import {LOGIN_CONNECT,USER_ID} from "@env";
 interface LoginScreenProps {
   onLogin?: (userId: string) => void;
@@ -25,6 +27,7 @@ interface LoginScreenProps {
 
 
 export default function LoginScreen({ onLogin }: LoginScreenProps) {
+  const router = useRouter();
   const dispatch = useAppDispatch()
   const LOGIN_CONNECT = process.env.EXPO_PUBLIC_LOGIN_CONNECT_LOCAL ;const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 
@@ -55,9 +58,9 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       Alert.alert("Success", "Logged in successfully!");
       console.log(response,'login user data');
       if(response.user.userType ==='customer'){
-        navigation.navigate("User/Home");
+        router.push("/User/Home");
       }else{
-        navigation.navigate("Organizer/organizerhome");
+        router.push("/Organizer/organizerhome");
       }
       
       

@@ -40,6 +40,8 @@ export default function OrganizerBookings() {
       const data = await dispatch(
         fetchOrganizerBookings(userId)
       ).unwrap();
+      console.log(data,'bookings');
+      
       setBookings(data);
     } catch (err) {
       console.log("Fetch error:", err);
@@ -62,6 +64,8 @@ export default function OrganizerBookings() {
         return;
       }
 
+      
+
       setBookings((prev: any) =>
         prev.map((b: any) => (b._id === id ? { ...b, status } : b))
       );
@@ -78,6 +82,8 @@ export default function OrganizerBookings() {
     return bookings.filter(
       (b: any) => b.status === activeFilter.toLowerCase()
     );
+
+    
   }, [bookings, activeFilter]);
 
   // LOADING STATE
@@ -93,6 +99,9 @@ export default function OrganizerBookings() {
       </View>
     );
   }
+
+  console.log(filtered,'filtered data');
+
 
   return (
     <View
@@ -146,7 +155,7 @@ export default function OrganizerBookings() {
                 pathname: "/ChatScreen",
                 params: {
                   receiverId: item.customerId?._id,
-                  name: item.customerId?.name,
+                  receiverName: item.customerId?.name,
                 },
               })
             }

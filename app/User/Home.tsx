@@ -15,7 +15,6 @@ import React from "react";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchOrganizers } from "../../store/slices/organizersSlice";
-
 export default function HomeScreen() {
   const dispatch: any = useAppDispatch();
   const navigator = useNavigation();
@@ -110,12 +109,12 @@ export default function HomeScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigator.navigate("User/Profile")}
+       {/*  <TouchableOpacity
+          onPress={() => navigator.navigate("Profile")}
           style={styles.chip}
         >
           <Text style={styles.chipText}>Profile</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Text style={styles.headerTitle}>Find Event Organizers</Text>
         <Text style={styles.headerSubtitle}>
@@ -157,7 +156,7 @@ export default function HomeScreen() {
           <OrganizerCard
             organizer={item}
             onPress={() =>
-              navigator.navigate("User/Organizer", {
+              navigator.navigate("Organizer", {
                 id: item._id,
                 name: item.name,
               })
@@ -282,7 +281,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  headerTitle: { fontSize: 22, fontWeight: "bold" },
+  headerTitle: { fontSize: 20, fontWeight: "bold" },
   headerSubtitle: { marginTop: 4, color: "#666" },
 
   searchBoxContainer: {

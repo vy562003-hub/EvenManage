@@ -14,6 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // Get from backend or AsyncStorage in real app
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
+console.log(USER_ID,'USER,ID');
+
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -109,7 +111,7 @@ export default function ProfileScreen() {
           style={styles.btnPrimary}
           onPress={() =>
             router.push({
-              pathname: "User/EditProfile",
+              pathname: "/User/EditProfile",
               params: { id: UserID },
             })
           }
@@ -119,7 +121,7 @@ export default function ProfileScreen() {
 
         <TouchableOpacity
           style={styles.btnSecondary}
-          onPress={() => router.push("User/History")}
+          onPress={() => router.push("/User/History")}
         >
           <Text style={styles.btnSecondaryText}>My Bookings</Text>
         </TouchableOpacity>
@@ -127,7 +129,7 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={styles.btnLogout}
           onPress={() => {
-            router.replace("LoginScreen");
+            router.replace("/LoginScreen");
           }}
         >
           <Text style={styles.btnLogoutText}>Logout</Text>

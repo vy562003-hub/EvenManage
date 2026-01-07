@@ -69,12 +69,17 @@ export default function BookingDetails() {
       setUploading(true);
 
       const data = await dispatch(
-        uploadBookingBill({ bookingId: id, file: asset })
+        uploadBookingBill({ bookingId: id as string, file: asset })
       ).unwrap();
+
+      
+
+      console.log(data,'organizer updated bill');
+      
 
       setUploading(false);
 
-      if (!data.ok) {
+      if (!data) {
         Alert.alert("Error", data.error || "Upload failed");
         return;
       }

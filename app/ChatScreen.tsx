@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Animated,
+  KeyboardAvoidingView,
   Image,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { ref, push, onValue } from "firebase/database";
 import { db } from "@/config/firebaseConfig";
@@ -23,8 +22,7 @@ import { useNavigation } from "expo-router";
 
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
-const SOCKET_URL =
-  process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL || "https://eventmanage.westindia.azurecontainerapps.io";
+const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL ||"http://10.73.136.82:5000";
 
 type ChatMessage = {
   senderId: string;
@@ -44,48 +42,83 @@ export default function ChatScreen() {
     receiverName: string;
   };
 
-  const insets = useSafeAreaInsets();
-
-  const [currentUserId, setCurrentUserId] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [text, setText] = useState("");
-
+  const flatListRef = useRef<FlatList>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const socketRef = useRef<Socket | null>(null);
   const fileBuffersRef = useRef<Record<string, string[]>>({});
 
   const baseDir =
     FileSystem.documentDirectory || FileSystem.cacheDirectory || "";
 
-  const chatId =
-    currentUserId && receiverId
-      ? currentUserId < receiverId
-        ? `${currentUserId}_${receiverId}`
-        : `${receiverId}_${currentUserId}`
-      : "";
+  const [currentUserId, setCurrentUserId] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [text, setText] = useState("");
+
+ 
 
   /* ------------------ animations ------------------ */
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 400,
+      duration: 300,
       useNativeDriver: true,
     }).start();
   }, []);
 
-  /* ------------------ session ------------------ */
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const res = await fetch(`${USER_ID}`, { credentials: "include" });
-        const data = await res.json();
-        if (data?.userId) setCurrentUserId(data.userId);
-      } catch (err) {
-        console.error("Error fetching session:", err);
-      }
-    };
-    fetchSession();
-  }, []);
+    // 1️⃣ Get current user from backend session
+    useEffect(() => {
+      console.log('fetch user');
+      console.log(USER_ID,"USER_ID");
+      
+      
+      const fetchSession = async () => {
+        try {
+          const res = await fetch(`${USER_ID}`, {
+            credentials: "include",
+          });
+          const data = await res.json();
+          console.log(data,'chat screen');
+          
+          if (data?.userId) {
+            setCurrentUserId(data.userId);
+            console.log(data.userId);
+            
+          } else {
+            console.warn("No userId in session response");
+          }
+        } catch (err) {
+          console.error("Error fetching session:", err);
+        }
+      };
+      fetchSession();
+    }, []);
+  
+    const chatId =
+    currentUserId && receiverId
+      ? currentUserId < receiverId
+        ? `${currentUserId}_${receiverId}`
+        : `${receiverId}_${currentUserId}`
+      : "";
+   /* ------------------ firebase ------------------ */
+   useEffect(() => {
+    if (!currentUserId || !chatId) return;
+
+    const chatRef = ref(db, `chats/${chatId}/messages`);
+    return onValue(chatRef, snapshot => {
+      const data = snapshot.val();
+      
+    console.log(data,'data');
+      
+      setMessages(
+        data
+          ? Object.values(data).sort(
+              (a: any, b: any) => a.timestamp - b.timestamp
+            )
+          : []
+      );
+    });
+  }, [currentUserId, chatId]);
 
   /* ------------------ socket ------------------ */
   useEffect(() => {
@@ -94,6 +127,8 @@ export default function ChatScreen() {
     const socket = io(SOCKET_URL, {
       transports: ["websocket"],
       reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
     });
 
     socketRef.current = socket;
@@ -139,24 +174,13 @@ export default function ChatScreen() {
     };
   }, [currentUserId, baseDir]);
 
-  /* ------------------ firebase ------------------ */
+ 
+  /* ------------------ auto scroll ------------------ */
   useEffect(() => {
-    if (!currentUserId || !chatId) return;
-
-    const chatRef = ref(db, `chats/${chatId}/messages`);
-    const unsubscribe = onValue(chatRef, (snapshot) => {
-      const data = snapshot.val();
-      setMessages(
-        data
-          ? Object.values(data).sort(
-              (a: any, b: any) => a.timestamp - b.timestamp
-            )
-          : []
-      );
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
     });
-
-    return () => unsubscribe();
-  }, [currentUserId, chatId]);
+  }, [messages]);
 
   /* ------------------ send text ------------------ */
   const sendMessage = async () => {
@@ -172,6 +196,18 @@ export default function ChatScreen() {
     });
 
     setText("");
+
+    if (SEND_NOTIFY) {
+      await fetch(SEND_NOTIFY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receiverId,
+          message: text,
+          senderName: "",
+        }),
+      });
+    }
   };
 
   /* ------------------ send file ------------------ */
@@ -194,10 +230,7 @@ export default function ChatScreen() {
       )}`;
       const localPath = `${baseDir}${storageKey}`;
 
-      await FileSystem.copyAsync({
-        from: asset.uri,
-        to: localPath,
-      });
+      await FileSystem.copyAsync({ from: asset.uri, to: localPath });
 
       const base64 = await FileSystem.readAsStringAsync(localPath, {
         encoding: "base64",
@@ -219,8 +252,7 @@ export default function ChatScreen() {
         });
       }
 
-      const chatRef = ref(db, `chats/${chatId}/messages`);
-      await push(chatRef, {
+      await push(ref(db, `chats/${chatId}/messages`), {
         senderId: currentUserId,
         receiverId,
         type: "file",
@@ -246,122 +278,118 @@ export default function ChatScreen() {
     return (
       <View
         style={[
-          styles.messageWrapper,
-          isSender ? styles.alignRight : styles.alignLeft,
+          styles.messageBubble,
+          isSender ? styles.senderBubble : styles.receiverBubble,
         ]}
       >
-        <View
-          style={[
-            styles.messageBubble,
-            isSender ? styles.senderBubble : styles.receiverBubble,
-          ]}
-        >
-          {isFile && fileUri ? (
-            <>
-              <Text style={styles.fileNameText}>{item.fileName}</Text>
-              {isImage && (
-                <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("ImageViewer", { uri: fileUri })
-                  }
-                >
-                  <Image source={{ uri: fileUri }} style={styles.fileImage} />
-                </TouchableOpacity>
-              )}
-            </>
-          ) : (
-            <Text style={styles.messageText}>{item.text}</Text>
-          )}
-        </View>
+        {isFile && fileUri ? (
+          <>
+            <Text style={styles.fileNameText}>{item.fileName}</Text>
+            {isImage && (
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("ImageViewer", { uri: fileUri })
+                }
+              >
+                <Image source={{ uri: fileUri }} style={styles.fileImage} />
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.messageText}>{item.text}</Text>
+        )}
       </View>
     );
   };
 
   return (
-    <View
-      style={[
-        styles.safeContainer,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={insets.top + 20}
-      >
-        {/* Header */}
+    <KeyboardAvoidingView style={styles.container} >
+      {/* TOP */}
+      <SafeAreaView edges={["top"]} style={styles.safeContainer}>
         <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <View style={styles.headerContent}>
-            <Ionicons
-              name="arrow-back"
-              size={22}
-              color="#fff"
-              onPress={() => navigation.back()}
-            />
-            <View style={{ marginLeft: 10 }}>
-              <Text style={styles.receiverName}>{receiverName}</Text>
-              <Text style={styles.status}>Online</Text>
-            </View>
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color="#fff"
+            onPress={() => navigation.pop()}
+          />
+          <View style={{ marginLeft: 10 }}>
+            <Text style={styles.receiverName}>{receiverName}</Text>
+            <Text style={styles.status}>Online</Text>
           </View>
         </Animated.View>
 
         <FlatList
+          ref={flatListRef}
           data={messages}
           renderItem={renderItem}
           keyExtractor={(_, i) => i.toString()}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.messagesContainer}
         />
+      </SafeAreaView>
 
-        {/* Input */}
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <TouchableOpacity onPress={handleSendFile}>
-              <Ionicons name="attach" size={20} color="#e5e7eb" />
+      {/* INPUT */}
+      <SafeAreaView edges={["bottom"]} style={styles.inputSafe}>
+        <View style={styles.inputWrapper}>
+          <TouchableOpacity onPress={handleSendFile}>
+            <Ionicons name="attach" size={20} color="#e5e7eb" />
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            value={text}
+            onChangeText={setText}
+            placeholder="Type a message..."
+            placeholderTextColor="#aaa"
+          />
+
+          {text.length > 0 && (
+            <TouchableOpacity onPress={sendMessage}>
+              <Ionicons name="send" size={20} color="#fff" />
             </TouchableOpacity>
-            <TextInput
-              style={styles.input}
-              value={text}
-              onChangeText={setText}
-              placeholder="Type a message..."
-              placeholderTextColor="#aaa"
-            />
-            {text.length > 0 && (
-              <TouchableOpacity onPress={sendMessage}>
-                <Ionicons name="send" size={20} color="#fff" />
-              </TouchableOpacity>
-            )}
-          </View>
+          )}
         </View>
-      </KeyboardAvoidingView>
-    </View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
-/* ------------------ styles ------------------ */
 const styles = StyleSheet.create({
-  safeContainer: { flex: 1, backgroundColor: "#0f172a" },
   container: { flex: 1 },
-  header: { backgroundColor: "#1e293b", padding: 14 },
-  headerContent: { flexDirection: "row", alignItems: "center" },
+  safeContainer: { flex: 1, backgroundColor: "#0f172a" },
+
+  header: {
+    backgroundColor: "#1e293b",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   receiverName: { color: "#fff", fontSize: 18, fontWeight: "700" },
   status: { color: "#94a3b8", fontSize: 12 },
+
   messagesContainer: { padding: 12 },
-  messageWrapper: { marginVertical: 4 },
-  messageBubble: { maxWidth: "75%", padding: 12, borderRadius: 18 },
+  messageBubble: {
+    maxWidth: "75%",
+    padding: 12,
+    borderRadius: 18,
+    marginVertical: 4,
+  },
   senderBubble: { backgroundColor: "#2563eb", alignSelf: "flex-end" },
   receiverBubble: { backgroundColor: "#334155", alignSelf: "flex-start" },
   messageText: { color: "#fff" },
-  alignRight: { alignItems: "flex-end" },
-  alignLeft: { alignItems: "flex-start" },
-  inputContainer: { backgroundColor: "#1e293b", padding: 10 },
+
+  inputSafe: { backgroundColor: "#1e293b" },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    padding: 10,
     backgroundColor: "#334155",
+    margin: 10,
     borderRadius: 25,
-    paddingHorizontal: 12,
   },
   input: { flex: 1, color: "#fff" },
+
   fileNameText: { color: "#e5e7eb", fontSize: 13, marginBottom: 6 },
   fileImage: { width: 170, height: 170, borderRadius: 12 },
 });

@@ -19,6 +19,7 @@ import io, { Socket } from "socket.io-client";
 import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useNavigation } from "expo-router";
+import { setActiveChat } from "@/utils/chatPresence";
 
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
@@ -33,6 +34,8 @@ type ChatMessage = {
   storageKey?: string;
   timestamp: number;
 };
+let chatId:any = null;
+
 
 export default function ChatScreen() {
   const navigation = useNavigation();
@@ -94,12 +97,26 @@ export default function ChatScreen() {
       fetchSession();
     }, []);
   
-    const chatId =
-    currentUserId && receiverId
-      ? currentUserId < receiverId
-        ? `${currentUserId}_${receiverId}`
-        : `${receiverId}_${currentUserId}`
-      : "";
+    
+    
+
+      console.log(chatId,'chat id from chat screen');
+/*-------- saving chat id globally whom to notification is not to be send ---------
+  */
+      useEffect(() => {
+        
+        chatId = currentUserId && receiverId
+        ? currentUserId < receiverId
+          ? `${currentUserId}_${receiverId}`
+          : `${receiverId}_${currentUserId}`
+        : "";
+
+        console.log(chatId,'chat id from chat screen-2');
+        setActiveChat(chatId);
+        return () => setActiveChat(null);
+      }, [chatId]);
+
+
    /* ------------------ firebase ------------------ */
    useEffect(() => {
     if (!currentUserId || !chatId) return;
@@ -108,7 +125,6 @@ export default function ChatScreen() {
     return onValue(chatRef, snapshot => {
       const data = snapshot.val();
       
-    console.log(data,'data');
       
       setMessages(
         data
@@ -311,7 +327,10 @@ export default function ChatScreen() {
             name="arrow-back"
             size={22}
             color="#fff"
-            onPress={() => navigation.pop()}
+            onPress={() => {
+              setActiveChat(null)
+              navigation.pop()
+            }}
           />
           <View style={{ marginLeft: 10 }}>
             <Text style={styles.receiverName}>{receiverName}</Text>

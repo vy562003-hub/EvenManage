@@ -145,10 +145,9 @@ export default function EditProfile() {
         <Image
           source={{
             uri:
-              user.profilePic ||
+            `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${user.profilePic}` ||
               "https://cdn-icons-png.flaticon.com/512/149/149071.png" +
-                "?t=" +
-                Date.now(),
+                "?t=" + Date.now()
           }}
           style={styles.profileImage}
         />

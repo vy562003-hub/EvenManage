@@ -36,7 +36,7 @@ export default function BookingScreen() {
     loading: ld,
   } = useAppSelector((state) => state.organizers);
 
-  const { userId: UserID } = useAppSelector((state) => state.user);
+  const  UserID  = useAppSelector((state) => state.user.userId);
 
   const [loading, setLoading] = useState(ld);
   const [selectedServices, setSelectedServices] = useState<any[]>([]);
@@ -44,20 +44,11 @@ export default function BookingScreen() {
   const [date, setDate] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
 
-  // Fetch user
-  const getUser = async () => {
-    try {
-      const data = await dispatch(fetchUser()).unwrap();
-      Alert.alert("User ID", data.userId);
-    } catch (err: any) {
-      Alert.alert("Error", err);
-    }
-  };
+  
 
   useEffect(() => {
     const fetchOrganizer = async () => {
       try {
-        await getUser();
         const selectedOrganizer = await dispatch(
           fetchOrganizerById(id)
         ).unwrap();

@@ -18,13 +18,20 @@ export default function ServicesPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [UserID, setUserID] = useState(
-    useAppSelector((state) => state.user.userId)
-  );
+  const UserID = useAppSelector((state) => state.user.userId ?? state.organizers.userId)
+  
+
+  
 
   const [services, setServices] = useState<any[]>(
-    useAppSelector((state) => state.user.userdata.services) || []
+    useAppSelector((state) => state.organizers.selectedOrganizer?.services ??
+      state.user.userdata?.services ??
+      [] )
+      
   );
+
+  console.log(services,'services page');
+
   const [loading, setLoading] = useState(false);
 
   const [newName, setNewName] = useState("");
@@ -55,9 +62,15 @@ export default function ServicesPage() {
   // SAVE TO BACKEND
   const saveServices = async () => {
     try {
+
+      console.log(UserID,services,'UserID services page when service save');
+      
       const res = await dispatch(
-        saveServicesAsync({ userId: UserID, services })
+        saveServicesAsync({ userId:UserID, services })
       ).unwrap();
+      
+      console.log("servicessaved");
+      
 
       if (!res.services) {
         alert("Failed to save services");

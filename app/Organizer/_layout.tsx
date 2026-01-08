@@ -9,27 +9,30 @@ import {
   StyleSheet,
 } from "react-native";
 import { DrawerItemList } from "@react-navigation/drawer";
+import { useAppSelector } from "@/store/hooks";
+
 
 
 function CustomDrawerContent(props: any) {
-  const user = {
-    profilePic: "",
-    name: "John Doe",
-  };
 
-  const pickImage = () => {
+  
+  const user =  useAppSelector((state) => (state.organizers.selectedOrganizer ??state.user.userdata ))
+
+  const routetoprofilepage = () => {
     console.log("Pick image");
+    console.log(user.profilePic ,'user.profilePic');
+    
   };
 
   return (
     <DrawerContentScrollView {...props}>
       {/* PROFILE SECTION */}
       <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={pickImage}>
+        <TouchableOpacity onPress={routetoprofilepage}>
           <Image
             source={{
               uri:
-                user.profilePic ||
+              `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${user.profilePic}` ||
                 "https://cdn-icons-png.flaticon.com/512/149/149071.png",
             }}
             style={styles.profileImage}
@@ -37,7 +40,7 @@ function CustomDrawerContent(props: any) {
         </TouchableOpacity>
 
         <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.changeText}>Change Profile Photo</Text>
+        
       </View>
 
       {/* DRAWER ITEMS (THIS IS THE KEY LINE) */}
@@ -61,6 +64,7 @@ export default function DrawerLayout() {
       <Drawer.Screen name="organizergallery" options={{ title: "Gallery" }} />
       <Drawer.Screen name="OrganizerProfile" options={{ title: "Profile" }} />
       <Drawer.Screen name="organizerservices" options={{ title: "Services" }} />
+      <Drawer.Screen name="OrganizerBookingDetails" options={{drawerItemStyle:{display:"none"}}} />
    
 
     </Drawer>

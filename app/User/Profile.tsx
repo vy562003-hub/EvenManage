@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppSelector } from "@/store/hooks";
 
 // Get from backend or AsyncStorage in real app
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
@@ -21,51 +22,14 @@ export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [UserID, setUserID] = useState<any>();
-  const [user, setUser] = useState<any>(null);
+  const UserID= useAppSelector((state) => state.user.userId);
+  const user = useAppSelector((state) => state.user.userdata);
   const [loading, setLoading] = useState(true);
 
-  const getuser = async () => {
-    try {
-      const response = await fetch(`${USER_ID}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+  
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed");
-      }
-
-      const data = await response.json();
-      setUserID(data.userId);
-    } catch (err: any) {
-      Alert.alert("Error", err.message);
-    }
-  };
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        await getuser();
-
-        if (!UserID) return;
-
-        const res = await fetch(`${API_BASE}/${UserID}`);
-        const data = await res.json();
-        setUser(data);
-      } catch (err) {
-        console.log("Profile fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [UserID]);
-
-  // LOADING STATE
+  
+  /* // LOADING STATE
   if (loading || !user) {
     return (
       <View
@@ -79,7 +43,7 @@ export default function ProfileScreen() {
       </View>
     );
   }
-
+ */
   return (
     <View
       style={[
@@ -92,7 +56,7 @@ export default function ProfileScreen() {
         <Image
           source={{
             uri:
-              user.profilePic ||
+            `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${user.profilePic}` ||
               "https://cdn-icons-png.flaticon.com/512/149/149071.png" +
                 "?t=" +
                 Date.now(),

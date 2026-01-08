@@ -15,6 +15,13 @@ import React from "react";
 
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchOrganizers } from "../../store/slices/organizersSlice";
+import * as Notifications from "expo-notifications";
+import {  fetchBookingHistory } from "@/store/slices/BookingSlice";
+import { listenToChatMessages } from "@/services/messageListener";
+
+console.log('render home');
+
+
 export default function HomeScreen() {
   const dispatch: any = useAppDispatch();
   const navigator = useNavigation();
@@ -27,6 +34,94 @@ export default function HomeScreen() {
   );
   const [loading, setLoading] = useState(ld);
   const [search, setSearch] = useState("");
+
+
+  const UserID  = useAppSelector((state) => state.user.userId ?? state.organizers.userId);
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  console.log(UserID,'home');
+
+
+  
+  useEffect(() => {
+    if (UserID) loadBookings();
+  }, [UserID]);
+
+  // ----------------------------------
+  // LOAD BOOKINGS
+  // ----------------------------------
+  const loadBookings = async () => {
+    try {
+
+      console.log(UserID,'load booking userid');
+      
+      const data = await dispatch(
+        fetchBookingHistory(UserID)
+      ).unwrap();
+      
+      
+      setBookings(data);
+    } catch (err) {
+      console.log("Fetch error:", err);
+    } finally {
+      //setLoading(false);
+    }
+  };
+
+
+  /* -------- useEffect global organizer chat event listner ----------- */
+
+
+
+  useEffect(() => {
+    if (!UserID || !bookings?.length) return;
+  
+  
+    let unsubscribers: Array<() => void> = [];
+    let isMounted = true;
+  
+    const setupListeners = async () => {
+      for (const obj of bookings) {
+        const receiverId = obj.organizerId._id;
+  
+        const chatId =
+          UserID < receiverId
+            ? `${UserID}_${receiverId}`
+            : `${receiverId}_${UserID}`;
+  
+        console.log(chatId, "registering listener");
+  
+        try {
+          const unsubscribe = await listenToChatMessages(chatId);
+  
+          if (isMounted && typeof unsubscribe === "function") {
+            unsubscribers.push(unsubscribe);
+          }
+        } catch (err) {
+          console.error("Failed to register listener for", chatId, err);
+        }
+      }
+    };
+  
+    setupListeners();
+  
+    return () => {
+      isMounted = false;
+  
+      console.log("🧹 Cleaning up chat listeners");
+  
+      unsubscribers.forEach((unsub) => {
+        try {
+          unsub();
+        } catch {}
+      });
+  
+      unsubscribers = [];
+    };
+  }, [bookings, UserID]);
+
+
+
 
   useEffect(() => {
     const fetchOrganizer = async () => {
@@ -41,6 +136,10 @@ export default function HomeScreen() {
 
     fetchOrganizer();
   }, [dispatch]);
+
+
+
+
 
   const filtered = useMemo(() => {
     let list = [...organizers];
@@ -225,16 +324,16 @@ function OrganizerCard({
   return (
     <TouchableOpacity onPress={onPress} style={styles.card}>
       <View style={styles.imageRow}>
-        <Image
+        {/* <Image
           source={
             { uri: profilePic }
               
           }
           style={styles.mainImage}
-        />
+        /> */}
 
         {secondImage ? (
-          <Image source={{ uri: secondImage }} style={styles.mainImage} />
+          <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${secondImage}` }} style={styles.mainImage} />
         ) : (
           <View style={styles.emptyImage}>
             <Text style={styles.emptyGalleryText}>No gallery</Text>

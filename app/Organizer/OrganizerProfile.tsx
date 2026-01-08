@@ -11,8 +11,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import {  useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
+
 import {
   uploadProfileImage,
   updateUserProfile,
@@ -31,7 +34,7 @@ export default function OrganizerProfile() {
   // States
   // ---------------------
   const [UserID, setUserID] = useState(
-    useAppSelector((state) => state.user.userId)
+    useAppSelector((state) => state.user.userId || state.organizers.userId)
   );
 
   const [profilePic, setProfilePic] = useState("");
@@ -55,7 +58,8 @@ export default function OrganizerProfile() {
         fetchOrganizerById(UserID as string)
       ).unwrap();
 
-      setProfilePic(data.profilePic);
+      setProfilePic(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${data.profilePic}`);
+      console.log(data.profilePic,'profilePic');
       setName(data.name);
       setPhone(data.phone);
       setEmail(data.email);
@@ -74,9 +78,17 @@ export default function OrganizerProfile() {
     }
   };
 
-  useEffect(() => {
-    if (UserID) loadProfile();
-  }, [UserID]);
+ 
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log(UserID,'organizer user id');
+    
+       if (UserID) loadProfile();
+  
+      return () => {};
+    }, [UserID])
+  );
 
   // ---------------------
   // Pick profile image
@@ -101,7 +113,7 @@ export default function OrganizerProfile() {
         uploadProfileImage({ userId: UserID, uri })
       ).unwrap();
 
-      setProfilePic(data.profilePic);
+      setProfilePic(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${data.profilePic}`);
       Alert.alert("Success", "Profile picture updated");
     } catch (err) {
       Alert.alert("Error", "Failed to upload picture");

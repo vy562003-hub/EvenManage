@@ -58,6 +58,8 @@ export const fetchBookingHistory = createAsyncThunk(
     "bookingHistory/fetch",
     async (userId: string, { rejectWithValue }) => {
       try {
+        console.log(userId,'userid from booking slice');
+        
         const res = await fetch(`${BOOKINGS}/${userId}`);
         const data = await res.json();
   

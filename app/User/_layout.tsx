@@ -1,6 +1,6 @@
 import { Drawer } from "expo-router/drawer";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,27 +9,31 @@ import {
   StyleSheet,
 } from "react-native";
 import { DrawerItemList } from "@react-navigation/drawer";
+import { useAppSelector } from "@/store/hooks";
+
+
 
 
 function CustomDrawerContent(props: any) {
-  const user = {
-    profilePic: "",
-    name: "John Doe",
-  };
 
-  const pickImage = () => {
+  
+  const user = useAppSelector((state) => (state.user.userdata));
+
+  const routetoprofilepage = () => {
     console.log("Pick image");
+    console.log(user.profilePic ,'user.profilePic');
+    
   };
 
   return (
     <DrawerContentScrollView {...props}>
       {/* PROFILE SECTION */}
       <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={pickImage}>
+        <TouchableOpacity onPress={routetoprofilepage}>
           <Image
             source={{
               uri:
-                user.profilePic ||
+                `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${user.profilePic}` ||
                 "https://cdn-icons-png.flaticon.com/512/149/149071.png",
             }}
             style={styles.profileImage}
@@ -37,7 +41,6 @@ function CustomDrawerContent(props: any) {
         </TouchableOpacity>
 
         <Text style={styles.name}>{user.name}</Text>
-        <Text style={styles.changeText}>Change Profile Photo</Text>
       </View>
 
       {/* DRAWER ITEMS (THIS IS THE KEY LINE) */}
@@ -72,6 +75,12 @@ export default function DrawerLayout() {
 />
 <Drawer.Screen
   name="Organizer"
+  options={{
+    drawerItemStyle: { display: "none" },
+  }}
+/>
+<Drawer.Screen
+  name="Booking"
   options={{
     drawerItemStyle: { display: "none" },
   }}

@@ -22,7 +22,7 @@ export default function OrganizerBookings() {
   const insets = useSafeAreaInsets();
 
   const [userId, setUserId]: any = useState(
-    useAppSelector((state) => state.user.userId)
+    useAppSelector((state) => state.user.userId ?? state.organizers.userId)
   );
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -24,10 +24,10 @@ function BigMediaView({ media }: any) {
   if (!media) return null;
 
   if (media.type === "image") {
-    return <Image source={{ uri: media.url }} style={styles.bigImage} />;
+    return <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${media.url}` }} style={styles.bigImage} />;
   }
 
-  const player = useVideoPlayer(media.url, (p) => p.pause());
+  const player = useVideoPlayer(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${media.url}`, (p) => p.pause());
 
   return (
     <VideoView

@@ -22,10 +22,12 @@ export default function ManageGallery() {
   const insets = useSafeAreaInsets();
 
   const [UserID, setUserID] = useState(
-    useAppSelector((state) => state.user.userId)
+    useAppSelector((state) => state.user.userId ?? state.organizers.userId)
   );
   const [gallery, setGallery] = useState<any[]>(
-    useAppSelector((state) => state.user.userdata.gallery)
+    useAppSelector((state) => (state.organizers.selectedOrganizer?.gallery ??
+      state.user.userdata?.gallery ??
+      [] ))
   );
   const [loading, setLoading] = useState(false);
 
@@ -66,9 +68,13 @@ export default function ManageGallery() {
   // ----------------------------
   const deleteMedia = async (url: string) => {
     try {
+      console.log(gallery,'delete gallery');
+
       const updated = await dispatch(
         deleteOrganizerMedia({ userId: UserID, url })
       ).unwrap();
+      console.log(updated,'delete gallery 2');
+      
 
       setGallery(updated);
       Alert.alert("Removed", "Media deleted");
@@ -97,14 +103,14 @@ export default function ManageGallery() {
   // GALLERY ITEM
   // ----------------------------
   const GalleryItem = ({ item }: any) => {
-    const player = useVideoPlayer(item.url, (player) => {
+    const player = useVideoPlayer(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${item.url}`, (player) => {
       player.pause();
     });
 
     return (
       <View style={styles.mediaBox}>
         {item.type === "image" ? (
-          <Image source={{ uri: item.url }} style={styles.media} />
+          <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${item.url}` }} style={styles.media} />
         ) : (
           <VideoView
             style={styles.media}

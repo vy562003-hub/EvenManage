@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { uploadOrganizerMedia,deleteOrganizerMedia,saveServicesAsync } from "./organizersSlice";
+import { uploadOrganizerMedia,deleteOrganizerMedia,saveServicesAsync, fetchOrganizerById } from "./organizersSlice";
 
 const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
@@ -11,7 +11,7 @@ export const fetchUser = createAsyncThunk(
   "user/fetch",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await fetch(USER_ID!, {
+      const response = await fetch(API_BASE!, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -222,6 +222,9 @@ const userSlice = createSlice({
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
         state.loading = false;
         state.userdata = action.payload;
+        state.userId = action.payload._id
+        console.log(action.payload,'action.payload');
+        
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.loading = false;
@@ -236,6 +239,8 @@ const userSlice = createSlice({
       .addCase(uploadProfileImage.fulfilled, (state, action) => {
         state.loading = false;
         state.userdata = action.payload;  // 🔥 server is new truth
+        console.log(action.payload,'new data with updated image');
+        
       })
       .addCase(uploadProfileImage.rejected, (state, action) => {
         state.loading = false;
@@ -263,13 +268,13 @@ const userSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
+        console.log(action.payload,"user login userslice");
+        
 
         // 🔥 adapt based on backend response
-        state.userId =
-          action.payload.userId || action.payload.user?._id;
+        state.userId = action.payload.user?._id;
 
-        state.userdata =
-          action.payload.user || action.payload;
+        state.userdata = action.payload.user 
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
@@ -295,6 +300,18 @@ const userSlice = createSlice({
         state.loading = false;
         // optional: update services from server
         state.userdata.services = action.payload.services;
+      })
+
+      // it is being used as user is getting logged in so we also have to update serdata or else on updating services or galley it shows null gallery and services
+      .addCase(fetchOrganizerById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userdata = action.payload;
+
+        
+        
+        state.userId = action.payload._id
+
+        
       })
     },
   });

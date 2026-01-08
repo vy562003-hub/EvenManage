@@ -126,8 +126,10 @@ export const uploadOrganizerMedia = createAsyncThunk(
         if (!res.ok) {
           return rejectWithValue(data.error || "Upload failed");
         }
-  
+        console.log(data,'gallery data from slice');
+        
         return data; // updated gallery array
+        
       } catch (err: any) {
         return rejectWithValue(err.message);
       }
@@ -186,6 +188,9 @@ export const uploadOrganizerMedia = createAsyncThunk(
       { rejectWithValue }
     ) => {
       try {
+
+        console.log(userId,"services slice");
+        
         const res = await fetch(
           `${API_MAIN}/api/organizer/services/${userId}`,
           {
@@ -196,6 +201,8 @@ export const uploadOrganizerMedia = createAsyncThunk(
         );
   
         const data = await res.json();
+        console.log(data,'services save data from slice');
+        
 
         
   
@@ -204,7 +211,9 @@ export const uploadOrganizerMedia = createAsyncThunk(
             data.error || "Failed to save services"
           );
         }
-  
+
+        console.log('return data');
+        
         return data; // backend response (updated organizer / services)
       } catch (err: any) {
         return rejectWithValue(err.message);
@@ -411,7 +420,10 @@ const organizersSlice = createSlice({
       .addCase(fetchOrganizerById.fulfilled, (state, action) => {
         state.loading = false;
         state.selectedOrganizer = action.payload;
-        state.userId = action.payload.userId
+
+        
+        
+        state.userId = action.payload._id
 
         // ⭐ SAME LOGIC YOU HAD IN useEffect
         if (action.payload?.gallery?.length > 0) {

@@ -13,10 +13,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import registerForPushNotificationsAsync from "@/utils/notificationSetup";
 
-const savetoken = process.env.EXPO_PUBLIC_SAVE_TOKEN;
 const localsavetoken = process.env.EXPO_PUBLIC_SAVE_TOKEN_LOCAL;
 const SIGN_UP = process.env.EXPO_PUBLIC_SIGN_UP_LOCAL;
-const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
 /* ============================
    SAVE PUSH TOKEN
@@ -61,7 +59,7 @@ export default function SignupScreen() {
 
   // 🔥 ROLE SELECTION
   const [userType, setUserType] = useState<"customer" | "organizer">(
-    "customer"
+    "organizer"
   );
 
   const handleSignup = async () => {
@@ -162,7 +160,7 @@ export default function SignupScreen() {
           />
 
           {/* ROLE SELECTION */}
-          <Text
+           <Text
             style={{
               color: "#e5e7eb",
               fontSize: 16,
@@ -192,7 +190,7 @@ export default function SignupScreen() {
               active={userType === "organizer"}
               onPress={() => setUserType("organizer")}
             />
-          </View>
+          </View> 
 
           {/* SIGNUP BUTTON */}
           <TouchableOpacity

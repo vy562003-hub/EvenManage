@@ -149,13 +149,20 @@ export const uploadProfileImage = createAsyncThunk(
         let response = null as any;
 
         if(userType == 'customer'){
+          console.log(LOGIN_CONNECT,'Login-connect');
+          
          response = await fetch(LOGIN_CONNECT!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ email, password, userType }),
         });
+
+
+        console.log(response);
+        
       }else{
+        console.log(LOGIN_CONNECT,'Login-connect');
         response = await fetch(LOGIN_CONNECT!, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -303,16 +310,19 @@ const userSlice = createSlice({
       })
 
       // it is being used as user is getting logged in so we also have to update serdata or else on updating services or galley it shows null gallery and services
-      .addCase(fetchOrganizerById.fulfilled, (state, action) => {
+       .addCase(fetchOrganizerById.fulfilled, (state, action) => {
         state.loading = false;
-        state.userdata = action.payload;
-
+        console.log(action.payload.userType,'userType');
+        console.log(action.payload,'userslice organizer payload');
         
+        
+       
+          state.userdata = action.payload;
         
         state.userId = action.payload._id
 
         
-      })
+      }) 
     },
   });
   

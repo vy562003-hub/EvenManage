@@ -137,7 +137,7 @@ export default function OrganizerDashboard() {
   const chartWidth = screenWidth - 16 * 2 - 16 * 2;
 
   return (
-    <SafeAreaView style={[styles.safeArea]}>
+    
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.container}
@@ -213,7 +213,7 @@ export default function OrganizerDashboard() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    
   );
 }
 

@@ -92,7 +92,7 @@ export default function OrganizerBookings() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -107,7 +107,7 @@ export default function OrganizerBookings() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       <Text style={styles.title}>Booking Requests</Text>

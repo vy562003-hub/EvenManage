@@ -157,7 +157,7 @@ export default function OrganizerProfile() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <Text>Loading Profile...</Text>
@@ -173,7 +173,7 @@ export default function OrganizerProfile() {
       style={{
         flex: 1,
         backgroundColor: "#fff",
-        paddingTop: insets.top,
+        
       }}
     >
       <ScrollView

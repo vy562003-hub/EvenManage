@@ -11,6 +11,8 @@ import { useRouter, useNavigation } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { fetchBookingHistory } from "@/store/slices/BookingSlice";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_URL_BOOKINGS_CUSTOMER;
 
@@ -27,12 +29,14 @@ export default function BookingHistoryScreen() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  /* useEffect(() => {
     const fetchBookings = async () => {
       try {
         const res = await dispatch(
           fetchBookingHistory(UserID)
         ).unwrap();
+        console.log('history page',res,UserID);
+        
 
         setBookings(res || []);
       } catch (err) {
@@ -44,14 +48,47 @@ export default function BookingHistoryScreen() {
 
     fetchBookings();
   }, [dispatch, UserID]);
+ */
 
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+  
+      const fetchBookings = async () => {
+        try {
+          setLoading(true);
+  
+          const res = await dispatch(
+            fetchBookingHistory(UserID)
+          ).unwrap();
+  
+          if (isActive) {
+            console.log("history page", res, UserID);
+            setBookings(res || []);
+          }
+        } catch (err) {
+          console.log("History fetch error:", err);
+        } finally {
+          isActive && setLoading(false);
+        }
+      };
+  
+      if (UserID) {
+        fetchBookings();
+      }
+  
+      return () => {
+        isActive = false;
+      };
+    }, [dispatch, UserID])
+  );
   // LOADING STATE
   if (loading) {
     return (
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -66,7 +103,7 @@ export default function BookingHistoryScreen() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <Text style={styles.noData}>No bookings yet</Text>
@@ -79,7 +116,7 @@ export default function BookingHistoryScreen() {
       style={{
         flex: 1,
         backgroundColor: "#fff",
-        paddingTop: insets.top,
+        
         paddingBottom: insets.bottom,
       }}
     >

@@ -19,24 +19,25 @@
       "node": "22.19.0",
       "env": {
         
-"LOGIN_CONNECT_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/login",
-"USER_ID_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/me",
-"USER_LIST_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/all",
-"SEND_NOTIFY_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/send-notification",
-"SAVE_TOKEN_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/save-token",
-"SIGN_UP_LOCAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/signup",
+"LOGIN_CONNECT_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/login",
+"USER_ID_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/me",
+"USER_LIST_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/all",
+"SEND_NOTIFY_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/send-notification",
+"SAVE_TOKEN_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/save-token",
+"SIGN_UP_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/signup",
 
-"API_URL":"https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizers",
-"API_URL_ID" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizer",
+"API_URL":"https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizers",
+"API_URL_ID" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizer",
 
-"API_URL_BOOKING": "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizer",
+"API_URL_BOOKING": "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/organizer",
 
-"API_URL_BOOKING_FINAL" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/booking",
+"API_URL_BOOKING_FINAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/booking",
 
-"API_URL_BOOKINGS_CUSTOMER" :"https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/booking/customer",
+"API_URL_BOOKINGS_CUSTOMER" :"https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/booking/customer",
 
-"API_BASE" : "https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/user",
-"API_BASE_ORGANIZER" :"https://eventmanage--0000003.yellowbush-163ce8ef.centralindia.azurecontainerapps.io"
+"API_BASE" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io/api/auth/user",
+"API_BASE_ORGANIZER" :"https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io",
+"SOCKET_URL_LOCAL" : "https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io"
       }
 
     }

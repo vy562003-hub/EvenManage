@@ -15,9 +15,13 @@ export default function ImageViewer() {
         onPress={() => router.back()}
       >
         <Image
-          source={require("../assets/images/close.png")} 
-          style={{ width: 28, height: 28 }}
-        />
+  source={{
+    uri: "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
+  }}
+  style={{ width: 28, height: 28 }}
+  resizeMode="contain"
+/>
+
       </TouchableOpacity>
 
       <Image

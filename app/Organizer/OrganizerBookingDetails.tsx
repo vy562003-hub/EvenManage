@@ -99,7 +99,7 @@ export default function BookingDetails() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <Text>Loading booking...</Text>
@@ -113,7 +113,7 @@ export default function BookingDetails() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       <Text style={styles.title}>Booking Details</Text>
@@ -145,7 +145,7 @@ export default function BookingDetails() {
         {booking.billUrl ? (
           <TouchableOpacity
             style={styles.viewBillBtn}
-            onPress={() => Linking.openURL(booking.billUrl)}
+            onPress={() => Linking.openURL(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${booking.billUrl}`)}
           >
             <Text style={styles.actionText}>View Bill</Text>
           </TouchableOpacity>

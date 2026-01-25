@@ -202,7 +202,7 @@ export default function HomeScreen() {
       style={{
         flex: 1,
         backgroundColor: "#ffffff",
-        paddingTop: insets.top,
+        
         paddingBottom: insets.bottom,
       }}
     >

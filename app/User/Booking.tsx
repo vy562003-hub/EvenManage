@@ -50,7 +50,7 @@ export default function BookingScreen() {
     const fetchOrganizer = async () => {
       try {
         const selectedOrganizer = await dispatch(
-          fetchOrganizerById(id)
+          fetchOrganizerById(id as string)
         ).unwrap();
 
         if (selectedOrganizer?.gallery?.length > 0) {
@@ -87,8 +87,11 @@ export default function BookingScreen() {
       alert("Select at least one service");
       return;
     }
+    
 
     try {
+      console.log(UserID,"customer-user id",id,"organizer user id");
+
       await dispatch(
         submitBooking({
           customerId: UserID,
@@ -113,7 +116,7 @@ export default function BookingScreen() {
       <View
         style={[
           styles.centerContainer,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -127,7 +130,7 @@ export default function BookingScreen() {
       style={{
         flex: 1,
         backgroundColor: "#fff",
-        paddingTop: insets.top,
+        
       }}
     >
       <ScrollView

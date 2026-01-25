@@ -4,6 +4,9 @@ import { useRouter } from "expo-router";
 import { useAppSelector,useAppDispatch } from "@/store/hooks";
 import { fetchUserProfile } from "@/store/slices/userSlice";
 import { fetchOrganizerById } from "@/store/slices/organizersSlice";
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync();
 
 const ME_URL = process.env.EXPO_PUBLIC_USER_ID_LOCAL; // /me/full
 
@@ -50,6 +53,7 @@ export default function Index() {
   }, []);
 
    async function userprocessing(){
+    SplashScreen.hide();
     if (!loading && user) {
       if (user.details.userType === "customer") {
         let customerdata = await dispatch(fetchUserProfile(user.userId)).unwrap();

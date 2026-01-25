@@ -60,14 +60,21 @@ export const fetchBookingHistory = createAsyncThunk(
       try {
         console.log(userId,'userid from booking slice');
         
-        const res = await fetch(`${BOOKINGS}/${userId}`);
+        const res:any = await fetch(`${BOOKINGS}/${userId}`);
         const data = await res.json();
+        console.log('booking data from slice',res,"data",data);
+        
   
         if (!res.ok) {
           return rejectWithValue(data.error || "Failed to fetch history");
         }
-  
-        return data || [];
+        if(data){
+          return data || [];
+
+        }else{
+          return res["_data"]
+        }
+        
       } catch (err: any) {
         return rejectWithValue(err.message);
       }

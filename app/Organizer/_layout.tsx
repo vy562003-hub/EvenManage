@@ -1,5 +1,5 @@
 import { Drawer } from "expo-router/drawer";
-import { DrawerContentScrollView } from "@react-navigation/drawer";
+import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import React from "react";
 import {
   View,
@@ -10,10 +10,22 @@ import {
 } from "react-native";
 import { DrawerItemList } from "@react-navigation/drawer";
 import { useAppSelector } from "@/store/hooks";
+import { useRouter } from "expo-router";
+
 
 
 
 function CustomDrawerContent(props: any) {
+  const router = useRouter()
+  async function logout (){
+    try {
+      await fetch(`${process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL}/api/auth/logout`)
+      router.replace('/LoginScreen')
+    } catch (error) {
+      
+    }
+  }
+
 
   
   const user =  useAppSelector((state) => (state.organizers.selectedOrganizer ??state.user.userdata ))
@@ -45,6 +57,21 @@ function CustomDrawerContent(props: any) {
 
       {/* DRAWER ITEMS (THIS IS THE KEY LINE) */}
       <DrawerItemList {...props} />
+      <DrawerItem
+        label="Help"
+        onPress={() => ('https://mywebsite.com/help')}
+      />
+      <TouchableOpacity onPress={() => {}}>
+      <DrawerItem
+        label="Logout"
+        onPress={logout}
+        focused={false}
+        inactiveTintColor="red"
+        pressColor="rgba(0,0,0,0.1)"
+        pressOpacity={0.6}
+        
+      />
+      </TouchableOpacity>
     </DrawerContentScrollView>
   );
 }

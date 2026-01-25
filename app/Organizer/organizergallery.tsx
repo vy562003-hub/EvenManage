@@ -91,7 +91,7 @@ export default function ManageGallery() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <Text>Loading gallery...</Text>
@@ -139,7 +139,7 @@ export default function ManageGallery() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       <Text style={styles.title}>Manage Gallery</Text>

@@ -31,7 +31,6 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const dispatch = useAppDispatch()
   const LOGIN_CONNECT = process.env.EXPO_PUBLIC_LOGIN_CONNECT_LOCAL ;const USER_ID =process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

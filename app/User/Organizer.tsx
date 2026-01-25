@@ -48,11 +48,13 @@ function GalleryThumbnail({ item, isActive, onPress }: any) {
     styles.thumbnail,
     isActive && { borderColor: "#0a7d28", borderWidth: 2 },
   ];
+  console.log(`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${item.url}`,'`${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${item.url}`');
+  
 
   if (item.type === "image") {
     return (
       <TouchableOpacity onPress={onPress}>
-        <Image source={{ uri: item.url }} style={thumbnailStyle} />
+        <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${item.url}` }} style={thumbnailStyle} />
       </TouchableOpacity>
     );
   }
@@ -110,7 +112,7 @@ export default function OrganizerDetails() {
       <View
         style={[
           styles.centerContainer,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -126,7 +128,7 @@ export default function OrganizerDetails() {
       style={{
         flex: 1,
         backgroundColor: "#fff",
-        paddingTop: insets.top,
+        
       }}
     >
       <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
@@ -152,7 +154,7 @@ export default function OrganizerDetails() {
         {/* HEADER */}
         <View style={styles.header}>
           <Image
-            source={{ uri: organizer.profilePic }}
+            source={{ uri: `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${organizer.profilePic}` }}
             style={styles.profilePic}
           />
 

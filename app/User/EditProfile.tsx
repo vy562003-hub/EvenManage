@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,8 @@ import {
   updateUserProfile,
   uploadProfileImage,
 } from "@/store/slices/userSlice";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
@@ -38,23 +40,33 @@ export default function EditProfile() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
-  // LOAD PROFILE
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setUser(userdata);
-        setName(userdata?.name || "");
-        setPhone(userdata?.phone || "");
-        setEmail(userdata?.email || "");
-      } catch (err) {
-        console.log("Profile fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchProfile();
-  }, [UserID, dispatch]);
+  const fetchProfile = async () => {
+      
+    try {
+      setUser(userdata);
+      setName(userdata?.name || "");
+      setPhone(userdata?.phone || "");
+      setEmail(userdata?.email || "");
+    } catch (err) {
+      console.log("Profile fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // LOAD PROFILE
+  useFocusEffect(
+
+    useCallback(() => {
+
+      
+  
+      fetchProfile();
+      return () => {};
+
+    } ,[UserID, user,userdata] )
+    
+   );
 
   // PICK IMAGE FROM GALLERY
   const pickImage = async () => {
@@ -122,7 +134,7 @@ export default function EditProfile() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -135,7 +147,7 @@ export default function EditProfile() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       <Text style={styles.title}>Edit Profile</Text>
@@ -145,9 +157,10 @@ export default function EditProfile() {
         <Image
           source={{
             uri:
-            `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${user.profilePic}` ||
+            `${process.env.EXPO_PUBLIC_API_BASE_ORGANIZER}${userdata.profilePic}`  +
+            "?t="  ||
               "https://cdn-icons-png.flaticon.com/512/149/149071.png" +
-                "?t=" + Date.now()
+                "?t=" 
           }}
           style={styles.profileImage}
         />

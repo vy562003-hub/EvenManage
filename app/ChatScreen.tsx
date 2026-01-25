@@ -9,6 +9,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Image,
+  Keyboard
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,10 +21,12 @@ import * as DocumentPicker from "expo-document-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useNavigation } from "expo-router";
 import { setActiveChat } from "@/utils/chatPresence";
+import * as Notifications from "expo-notifications";
+import { useHeaderHeight } from '@react-navigation/elements';
 
 const USER_ID = process.env.EXPO_PUBLIC_USER_ID_LOCAL;
 const SEND_NOTIFY = process.env.EXPO_PUBLIC_SEND_NOTIFY_LOCAL;
-const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL ||"http://10.73.136.82:5000";
+const SOCKET_URL = process.env.EXPO_PUBLIC_SOCKET_URL_LOCAL ||"https://event-server.yellowbush-163ce8ef.centralindia.azurecontainerapps.io";
 
 type ChatMessage = {
   senderId: string;
@@ -32,12 +35,14 @@ type ChatMessage = {
   text?: string;
   fileName?: string;
   storageKey?: string;
+  
   timestamp: number;
 };
 let chatId:any = null;
 
 
 export default function ChatScreen() {
+  const headerHeight = useHeaderHeight();
   const navigation = useNavigation();
   const route = useRoute();
   const { receiverId, receiverName } = route.params as {
@@ -57,6 +62,33 @@ export default function ChatScreen() {
   const [currentUserId, setCurrentUserId] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [verticaloffset,setVerticaloffset] = useState(0);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', handleKeyboardShow);
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', handleKeyboardHide);
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+  const handleKeyboardShow = (event) => {
+    console.log('keyboard - visible ');
+    
+    setVerticaloffset(-34);
+    
+    
+    setIsKeyboardVisible(true);
+  };
+
+  const handleKeyboardHide = (event) => {
+    console.log('keyboard - not- visible ');
+    setVerticaloffset(0);
+    setIsKeyboardVisible(false);
+  };
 
  
 
@@ -214,6 +246,9 @@ export default function ChatScreen() {
     setText("");
 
     if (SEND_NOTIFY) {
+
+      const token = await Notifications.getExpoPushTokenAsync();
+  console.log("✅ EXPO PUSH TOKEN:", token.data);
       await fetch(SEND_NOTIFY, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -319,64 +354,80 @@ export default function ChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} >
-      {/* TOP */}
-      <SafeAreaView edges={["top"]} style={styles.safeContainer}>
-        <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <Ionicons
-            name="arrow-back"
-            size={22}
-            color="#fff"
-            onPress={() => {
-              setActiveChat(null)
-              navigation.pop()
-            }}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior="padding"
+        keyboardVerticalOffset={isKeyboardVisible?-34:0}
+      >
+        {/* TOP */}
+        <View style={styles.safeContainer}>
+          <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
+            <Ionicons
+              name="arrow-back"
+              size={22}
+              color="#fff"
+              onPress={() => {
+                setActiveChat(null)
+                navigation.pop()
+              }}
+            />
+            <View style={{ marginLeft: 10 }}>
+              <Text style={styles.receiverName}>{receiverName}</Text>
+              <Text style={styles.status}>Online</Text>
+            </View>
+          </Animated.View>
+  
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderItem}
+            keyExtractor={(_, i) => i.toString()}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.messagesContainer}
           />
-          <View style={{ marginLeft: 10 }}>
-            <Text style={styles.receiverName}>{receiverName}</Text>
-            <Text style={styles.status}>Online</Text>
-          </View>
-        </Animated.View>
-
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderItem}
-          keyExtractor={(_, i) => i.toString()}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.messagesContainer}
-        />
-      </SafeAreaView>
-
-      {/* INPUT */}
-      <SafeAreaView edges={["bottom"]} style={styles.inputSafe}>
-        <View style={styles.inputWrapper}>
-          <TouchableOpacity onPress={handleSendFile}>
-            <Ionicons name="attach" size={20} color="#e5e7eb" />
-          </TouchableOpacity>
-
-          <TextInput
-            style={styles.input}
-            value={text}
-            onChangeText={setText}
-            placeholder="Type a message..."
-            placeholderTextColor="#aaa"
-          />
-
-          {text.length > 0 && (
-            <TouchableOpacity onPress={sendMessage}>
-              <Ionicons name="send" size={20} color="#fff" />
-            </TouchableOpacity>
-          )}
         </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+  
+        {/* INPUT */}
+        <View style={styles.inputSafe}>
+          <View style={styles.inputWrapper}>
+            <TouchableOpacity onPress={handleSendFile}>
+              <Ionicons name="attach" size={20} color="#e5e7eb" />
+            </TouchableOpacity>
+  
+            <TextInput
+              style={styles.input}
+              value={text}
+              onChangeText={setText}
+              placeholder="Type a message..."
+              placeholderTextColor="#aaa"
+            />
+  
+            {text.length > 0 && (
+              <TouchableOpacity onPress={sendMessage}>
+                <Ionicons name="send" size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
+  
+  
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeContainer: { flex: 1, backgroundColor: "#0f172a" },
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+    paddingBottom:0,
+  },
+
+  safeContainer: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
 
   header: {
     backgroundColor: "#1e293b",
@@ -384,31 +435,77 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  receiverName: { color: "#fff", fontSize: 18, fontWeight: "700" },
-  status: { color: "#94a3b8", fontSize: 12 },
 
-  messagesContainer: { padding: 12 },
+  receiverName: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+
+  status: {
+    color: "#94a3b8",
+    fontSize: 12,
+  },
+
+  messagesContainer: {
+    padding: 12,
+    paddingBottom: 10,
+  },
+
   messageBubble: {
     maxWidth: "75%",
     padding: 12,
     borderRadius: 18,
     marginVertical: 4,
   },
-  senderBubble: { backgroundColor: "#2563eb", alignSelf: "flex-end" },
-  receiverBubble: { backgroundColor: "#334155", alignSelf: "flex-start" },
-  messageText: { color: "#fff" },
 
-  inputSafe: { backgroundColor: "#1e293b" },
+  senderBubble: {
+    backgroundColor: "#2563eb",
+    alignSelf: "flex-end",
+  },
+
+  receiverBubble: {
+    backgroundColor: "#334155",
+    alignSelf: "flex-start",
+  },
+
+  messageText: {
+    color: "#fff",
+    fontSize: 15,
+  },
+
+  inputSafe: {
+    backgroundColor: "#1e293b",
+  },
+
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
     backgroundColor: "#334155",
-    margin: 10,
+    marginHorizontal: 10,
+    marginVertical: 8,
     borderRadius: 25,
   },
-  input: { flex: 1, color: "#fff" },
 
-  fileNameText: { color: "#e5e7eb", fontSize: 13, marginBottom: 6 },
-  fileImage: { width: 170, height: 170, borderRadius: 12 },
+  input: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 15,
+    marginHorizontal: 8,
+  },
+
+  fileNameText: {
+    color: "#e5e7eb",
+    fontSize: 13,
+    marginBottom: 6,
+  },
+
+  fileImage: {
+    width: 170,
+    height: 170,
+    borderRadius: 12,
+  },
 });
+
+

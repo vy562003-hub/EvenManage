@@ -35,7 +35,7 @@ export default function ProfileScreen() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <ActivityIndicator size="large" />
@@ -48,7 +48,7 @@ export default function ProfileScreen() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       {/* PROFILE HEADER */}

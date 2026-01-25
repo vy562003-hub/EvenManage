@@ -91,7 +91,7 @@ export default function ServicesPage() {
       <View
         style={[
           styles.center,
-          { paddingTop: insets.top, paddingBottom: insets.bottom },
+          {  paddingBottom: insets.bottom },
         ]}
       >
         <Text>Loading...</Text>
@@ -103,7 +103,7 @@ export default function ServicesPage() {
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
+        {  paddingBottom: insets.bottom },
       ]}
     >
       <Text style={styles.title}>Manage Services</Text>
